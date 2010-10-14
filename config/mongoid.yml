@@ -1,0 +1,24 @@
+defaults: &defaults
+  host: localhost
+  autocreate_indexes: true
+  allow_dynamic_fields: true
+  parameterize_keys: true
+  persist_in_safe_mode: false
+  raise_not_found_error: true
+  reconnect_time: 3
+
+development:
+  <<: *defaults
+  database: rambler_development
+  autocreate_indexes: true
+
+test:
+  <<: *defaults
+  database: control_test
+
+# set these environment variables on your prod server
+production:
+  <<: *defaults
+  host: <%= ENV['MONGOID_HOST'] %>
+  port: <%= ENV['MONGOID_PORT'] %>
+  database: <%= ENV['MONGOID_DATABASE'] %>

@@ -1,0 +1,27 @@
+%html
+  %head
+    %title rambler                 
+    - if ENV["RACK_ENV"] == 'production'
+      =stylesheet_link_tag 'deploy.css'
+      =javascript_include_tag 'deploy.js'
+    - else
+      =stylesheet_link_tag 'reset', 'grid', 'style'
+      = javascript_include_tag '/faye.js','def','protoaculous.min', 'lowpro','app'
+
+%body
+  =flash_tag(:success, :class => 'message success', :id => 'flash-success')
+  =flash_tag(:notice, :class => 'message notice', :id => 'flash-notice')
+  =flash_tag(:error, :class => 'message error', :id => 'flash-error')   
+  #app_element{:style => "display:none;"} 
+  #message{:style => "display:none;"}
+    %p
+  .container_12#container
+    =yield
+    .grid_12.alpha#footer{"style"=>"display:none"}
+      %p
+        Produced by
+        =link_to "Austin Bales", "http://austinbales.com"
+        at
+        =link_to("417east", "http://417east.com") + "."
+        =link_to "Bug Reports &amp; Feature Requests", "http://417east.com/support/contact", :id => "bug-link"
+      

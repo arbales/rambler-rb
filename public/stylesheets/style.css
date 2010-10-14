@@ -1,0 +1,81 @@
+html {
+	font-family:'Helvetica Neue', sans-serif;
+	font-size:16px;
+	color:#999;
+	background:url('/images/pink_dot_bg.gif') repeat-x ;
+}
+
+.header {
+  background-color:#DF3D82;
+  color:#fff;
+  padding:2ex 2ex;
+  margin-bottom:8ex;
+}
+
+.main_divider {
+  position:absolute;
+  width:100%;
+  left:0px;
+  border-bottom:3px double rgba(0,0,0,.1);
+}
+
+h1,h2,h3,h4,h5,h6 {
+  margin:1ex 0ex;
+}
+
+h1 {
+  font-size:32px;
+}
+
+h2 {
+  font-size:22px;
+}
+
+.messages p {
+  font-size:22px;
+  padding:12px 0px;
+}
+
+input, button {
+  font-size:20px;
+  padding:1ex;
+  border:1px solid rgba(0,0,0,.25);
+  border-radius:.25ex;
+}
+
+input[type=text]{
+  width:80%;
+}
+
+p:hover button.sidebar {
+  display:inline-block;
+}
+button.sidebar {
+  display:none;
+  padding:.5ex;
+  font-size:10px;
+}
+
+input[type=button],input[type=submit],button{
+  padding:1ex 2ex;
+  background: #EEE -webkit-gradient(linear, left top, left bottom, from(#FFFFFF), to(#E4E4E4), color-stop(.05, #F4F4F4));
+              -webkit-background-clip: border-box;
+}
+
+span.user {
+  font-size:13px;
+  display:inline-block;
+  min-width:100px;
+}
+
+.messages {
+  float:left;
+}
+
+.vspace {
+  height:16px;
+}
+
+.vspace_2 {
+  height:32px;
+}

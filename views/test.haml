@@ -1,0 +1,23 @@
+.grid_12.header
+  %h1 rambler, the odostream
+.clear.vspace
+
+%form.login.grid_10
+  %h2 What's your name?
+  =text_field_tag :username
+  =submit_tag "Say Hello"
+  
+%form.publisher.grid_10{style: "display:none"}
+  %h2 Share
+  =text_field_tag :message
+  =submit_tag "Post"
+
+.clear.vspace_2
+.main_divider
+.clear.vspace
+.scroller.grid_12
+  .messages
+    %p
+      Nothing yet...
+
+  
