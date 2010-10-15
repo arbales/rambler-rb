@@ -1,15 +1,9 @@
-.grid_12.header
-  %h1 rambler, the odostream
-.clear.vspace
-
 %form.login.grid_10
-  %h2 What's your name?
-  =text_field_tag :username
+  =text_field_tag :username, :placeholder => "Type your name&hellip;"
   =submit_tag "Say Hello"
   
 %form.publisher.grid_10{style: "display:none"}
-  %h2 Share
-  =text_field_tag :message
+  =text_field_tag :message, :placeholder => "Type what to share&hellip;"
   =submit_tag "Post"
 
 .clear.vspace_2
@@ -17,7 +11,8 @@
 .clear.vspace
 .scroller.grid_12
   .messages
-    %p
-      Nothing yet...
-
+    - @posts.each do |post|
+      %p 
+        %span.user= "@" + post.username
+        = post.text
   

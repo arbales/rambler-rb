@@ -6,7 +6,7 @@
       =javascript_include_tag 'deploy.js'
     - else
       =stylesheet_link_tag 'reset', 'grid', 'style'
-      = javascript_include_tag '/faye.js','def','protoaculous.min', 'lowpro','app'
+      = javascript_include_tag '/faye.js','def', 'sha1','protoaculous.min', 'lowpro','app'
 
 %body
   =flash_tag(:success, :class => 'message success', :id => 'flash-success')
@@ -16,7 +16,12 @@
   #message{:style => "display:none;"}
     %p
   .container_12#container
+    .grid_12.header
+      %h1
+        %img{src: '/images/output.png', alt: "Rambler"}
+    .clear.vspace_2
     =yield
+
     .grid_12.alpha#footer{"style"=>"display:none"}
       %p
         Produced by

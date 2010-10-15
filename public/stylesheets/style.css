@@ -9,7 +9,8 @@ html {
   background-color:#DF3D82;
   color:#fff;
   padding:2ex 2ex;
-  margin-bottom:8ex;
+  margin-bottom:8ex;    
+  border-top:4px solid rgba(0,0,0,.35);
 }
 
 .main_divider {
@@ -33,7 +34,20 @@ h2 {
 
 .messages p {
   font-size:22px;
-  padding:12px 0px;
+  padding:1ex .5ex;
+}       
+
+.messages p img {
+  max-height:200px;
+  border:4px solid #fff;
+  -webkit-box-shadow:rgba(0,0,0,.15) 0px 2px 4px 1px;
+}  
+.messages p.persists-false {
+  font-size:11px;
+}
+     
+.messages p:nth-child(even){
+  background-color:rgba(0,0,0,.03);
 }
 
 input, button {

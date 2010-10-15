@@ -3,6 +3,7 @@ $LOAD_PATH.unshift File.dirname(__FILE__)
 
 #require "sunshowers"
 require 'rubygems'
+require 'eventmachine'
 require 'sinatra'     
 #require 'padrino-core/application/rendering'
 require 'renderer'
@@ -13,7 +14,8 @@ require 'json'
 require 'bcrypt'
 require 'fileutils'
 require 'faye'
-require 'mongoid'
+require 'mongoid'   
+require 'digest/sha1'
 
 load 'configure.rb'
 load 'models.rb' 
