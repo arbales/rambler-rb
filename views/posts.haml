@@ -1,0 +1,7 @@
+- @posts.each do |post|
+  %p
+    %span.user
+      = post.username
+    = post.text
+    = "<br/><br/>"
+    = post.id
