@@ -1,6 +1,7 @@
 Stream = {};
 App = {};  
 App.authToken = '0';
+
 function urlify(text) {
     var urlRegex = /(https?:\/\/[^\s]+)/g;
     text.replace(urlRegex, function(url) {
@@ -37,7 +38,6 @@ var ClientAuth = {
       message.ext = {};
       message.ext.authToken = App.sharedStorageManager.get('token');
     }                      
-//    console.log(message);
     callback(message);
   }, 
   incoming: function(message, callback){
@@ -45,11 +45,24 @@ var ClientAuth = {
       message.text = message.error;  
       App.sub.receive(message);
     } else if (message.channel == "/meta/subscribe" && message.successful == true){
-      Stream.client.publish(message.subscription[0], {text:("joined the conversation on " + message.subscription[0]), username: App.sub.username, persists: "false"});
+      Stream.client.publish(message.subscription[0], {text:(" joined the conversation on " + message.subscription[0]), username: App.sub.getUsername(), persists: "false"});
     }
     callback(message);
   }
-};       
+};    
+
+var MentionHandler = {
+  incoming: function(message, callback){
+    if (message.channel == ("/mentions/"+App.sharedStorageManager.get('username')) && message.data && message.data.persists != 'false'){
+    
+      var mentions = $$('.mentions .count').first();
+      var count = parseInt(mentions.innerHTML) || 0;
+      count++;
+      mentions.update(count);
+    }
+    callback(message);
+  }
+};   
 
 def ("StorageManager")({
   init: function(){
@@ -70,33 +83,36 @@ def ("StorageManager")({
 });
 
 def ("Juggler")({
-  init: function(channels){
-//    $$('.messages').first().update();
-    this.username = channels[0];
-//    this.username = username; 
+  init: function(channels, element){
+    this.element = element || null;
+    //this.username = channels[0];
     this.channels = channels;
-    this.channels[0] = "people/" + this.channels[0];
+    //this.channels.push("mentions/"+this.channels[0]);
+    //this.channels[0] = "people/" + this.channels[0];
     var self = this;
     this.subscriptions = this.channels.collect(function(channel){
       return Stream.client.subscribe("/"+channel, function(message){self.receive(message);});
     });
-    
-    //this.send("joined the convo.");
   },
   cancel: function(){
     this.subscription.cancel();
   },
+  getUsername: function(){
+    return App.sharedStorageManager.get('username');
+  },
   receive: function(message){    
-    var el = new Element("p");
-    console.info(message);
-    if (message.persists == 'false'){
-      el.addClassName("persists-false");
+    if (this.element != null){
+      var el = new Element("p");
+      if (message.persists == 'false'){
+        el.addClassName("persists-false");
+      }
+
+      this.element.insert({top: el.update("<span class='user'>@" + message.username + "</span>" + message.text).hide().appear()});      
+        
+      Event.addBehavior.reload.defer(); 
+    }else{
+      console.log("Unrouted Message:" + message.text);
     }
-    $$('.messages').first().insert({top: el.update("<span class='user'>@" + message.username + "</span>" + message.text/*+ " <button class='sidebar'>sidebar</button>"*/).hide().appear({duration:.25, queue: 'end'})});
-    if (message.text.include(this.username)){
-      el.highlight({queue:'end', delay: .1, duration:2});
-    }
-    Event.addBehavior.reload.defer(); 
   },
   send: function(send_text){
    /* groups = []
@@ -110,7 +126,7 @@ def ("Juggler")({
       Stream.client.publish("/"+s.substr(1, length -2), {text: send_text, username: this.username});
     });   */
 //    Stream.client.publish("/"+this.channels[0], {text: send_text, username: this.username});
-    Stream.client.publish("/"+this.channels[1], {text: send_text, username: this.username});
+    Stream.client.publish("/"+this.channels[0], {text: send_text, username: this.getUsername()});
     
   },
 });
@@ -126,19 +142,19 @@ document.observe('dom:loaded', function(){
   document.stopObserving('dom:loaded');
    
   App.sharedStorageManager = new StorageManager();
-  Stream.client = new Faye.Client('http://bubbles.local:3000/faye');
-  Stream.client.addExtension(ClientAuth);  
+  Stream.client = new Faye.Client('http://desk.austinbales.com/faye');
+  Stream.client.addExtension(ClientAuth); 
+  Stream.client.addExtension(MentionHandler); 
   
   Event.addBehavior({
     "form.login:submit":function(event){
       Event.stop(event);      
       var el = this.down("input[type=text]");
       var username = $F(el).toLowerCase();
-      App.sub = new Juggler([username, "chat"]);
-//      App.sub = new Juggler(username,["chat"]);  
+      App.sub = new Juggler("chat", $('main_stream'));
 
-      this.fade({duration:.25, queue:'end'});
-      $$('form.publisher').first().appear({duration:.25, queue:'end'});
+      this.fade(/*{duration:.25, queue:'end'}*/);
+      $$('form.publisher').first().appear();
       
       window.onbeforeunload = function (){
         return App.sub.send("left the chat.");
@@ -152,36 +168,93 @@ document.observe('dom:loaded', function(){
       el.clear();
     }, 
     "form.publisher input[type=text]:drop":function(event){
-//      Event.stop(event);
-      alert("Drop!");
     },
-    ".messages p img:mouseover":function(event){
+    ".messages p img:click":function(event){
       var orig = this;
-      var el = this.clone().absolutize().setStyle({'width':'auto', 'height':'auto', 'max-height':'500px'});
-        this.insert({after: el});
-        Element.clonePosition(el, orig, {setWidth: false, setHeight: false, offsetTop:((orig.getHeight() - el.getHeight())/2), offsetLeft: ((orig.getWidth()-el.getWidth())/2)});
-        el.observe('mouseout', function(evt){
-          el.remove(); 
-        });                                         
+      var el = orig.clone().absolutize();
+      Element.clonePosition(el, orig, {setWidth: false, setHeight: false});
+      document.body.appendChild(el.setStyle({'height':'auto', 'width': 'auto', 'border':'4px solid #fff', '-webkit-box-shadow':'rgba(0,0,0,.15) 0px 2px 4px 1px'}));
+      orig.morph("opacity:0");
+      el.observe('mouseout', function(event){
+        el.fade({duration:.25});
+        orig.morph("opacity:1",{duration:.25});
+      })
     },
     "form.save_auth_token:submit":function(event){     
       Event.stop(event);
-      var token = $F(this.down("input[type=text]"));
+      var token = $F(this.down("input[type=text][name=token]"));
+      var username = $F(this.down("input[type=text][name=username]"));
       App.sharedStorageManager.set('token', token);
+      App.sharedStorageManager.set('username', username);
+
       window.location.href = "/";
     }, 
     ".messages p span.user:click":function(){
       $$('form.publisher').first().down("input[type=text]").value = this.innerHTML.strip() + " ";
       $$('form.publisher').first().down("input[type=text]").focus();
+    },
+    "li.mentions:click":function(){
+      var self = this;
+      Element.clonePosition($('mention_stream'), self, {setWidth:false, setHeight:false, offsetTop: 40, offsetLeft: -270});
+      $('mention_stream').toggle();
+    },
+    "#mention_stream .command a:click":function(event){
+      Event.stop(event);
+      var date = App.sharedStorageManager.get('last_mention_pull');
+      
+      var mentions = $$('.mentions .count').first();
+      var count = parseInt(mentions.innerHTML) || 0;
+
+      
+      new Ajax.Request("/mentions/"+App.sharedStorageManager.get('username'), {
+        method: 'get',
+        parameters: {since: date},
+        onSuccess: function(transport){
+          var data = transport.responseText.evalJSON();
+          data.each(function(message){
+            count++;
+            mentions.update(count);
+            App.mention_watcher.receive(message);
+          });
+          var date = new Date();
+          App.sharedStorageManager.set('last_mention_pull', date.toString());
+        }, 
+        onComplete: function(){
+
+        }
+      });
     }
   });
   
-  if (getQuerystring("username") != ""){
-    App.sub = new Juggler([getQuerystring("username"), "chat"]);  
-    //App.sub = new Juggler(getQuerystring("username"),["chat"]);  
-    $$('.login').first().fade({duration:.25, queue:'end'});
-    $$('form.publisher').first().appear({duration:.25, queue:'end'});
+  if (App.sharedStorageManager.get('username') != ""){
+    App.sub = new Juggler(["chat"], $('main_stream'));  
+    $$('.login').first().fade();
+    $$('form.publisher').first().appear();
   }
+  
+  if($('mention_stream').childElements().size() == 1){
+    var date = App.sharedStorageManager.get('last_mention_pull');
+    
+    var mentions = $$('.mentions .count').first();
+    var count = parseInt(mentions.innerHTML) || 0;
+    
+    new Ajax.Request("/mentions/"+App.sharedStorageManager.get('username'), {
+      method: 'get',
+      parameters: {since: date},
+      onSuccess: function(transport){
+        var data = transport.responseText.evalJSON();
+        data.each(function(message){
+          count++;
+          mentions.update(count);
+          App.mention_watcher.receive(message);
+        });
+        var date = new Date();
+        App.sharedStorageManager.set('last_mention_pull', date.toString());
+      }, 
+    });
+  }
+  
+  App.mention_watcher = new Juggler(['mentions/'+App.sharedStorageManager.get('username')], $('mention_stream'));
   
 });
 

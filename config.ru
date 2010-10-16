@@ -7,7 +7,7 @@ app = Rack::Builder.new {
   run Sinatra::Application
 }
 
-faye = Faye::RackAdapter.new(app.to_app, :mount => '/faye')
+$faye = Faye::RackAdapter.new(app.to_app, :mount => '/faye')
 
 class ServerAuth
   def incoming(message, callback)  
@@ -23,8 +23,15 @@ class ServerAuth
     msg_token    = message['ext'] && message['ext']['authToken']
     
   begin                                       
-    if (subscription.starts_with? "/people/")                                             
+    if (subscription.start_with?("/people/"))                                             
       person = Person.first(:conditions => { :username => subscription.sub("/people/", "")})     
+      # Add an error if the tokens don't match
+      if (Digest::SHA1.hexdigest(person.key + "salt" + person.username) != msg_token)
+        message['error'] = "You couldn't join #{subscription} because of a permissions problem."
+      end
+    end
+    if (subscription.start_with?("/mentions/"))
+      person = Person.first(:conditions => { :username => subscription.sub("/mentions/", "")})     
       # Add an error if the tokens don't match
       if (Digest::SHA1.hexdigest(person.key + "salt" + person.username) != msg_token)
         message['error'] = "You couldn't join #{subscription} because of a permissions problem."
@@ -50,7 +57,22 @@ class Archiver
     
     begin
       if ((message['data']['text'] && message['data']['username'] && message['channel'] && message['data']['persists'] != 'false') rescue false)
-        Post.create(:text => message['data']['text'], :channel => message['channel'], :username => message['data']['username'])    
+
+        tokens = message['data']['text'].split(" ")        
+
+        if(!(message['channel'].start_with?("/mentions")))
+          Post.create(:text => message['data']['text'], :channel => message['channel'], :username => message['data']['username'])
+        end
+        if (tokens[0].start_with?("@") && !(message['channel'].start_with?("/mentions")))
+          Post.create(:text => message['data']['text'], :channel => "/mentions/#{tokens[0].sub('@', '')}", :username => message['data']['username'])
+          
+          $faye.get_client.publish("/mentions/#{tokens[0].sub('@', '')}", {
+            'text'      => message['data']['text'],
+            'username' => message['data']['username']
+          })
+        end
+        
+        
       end
     rescue => e
       puts e
@@ -76,9 +98,14 @@ class Formatter
   end
 end
 
-faye.add_extension(Archiver.new)   
-faye.add_extension(ServerAuth.new)   
+class Forwarder
+  def incoming(message, clallback)
+  end
+end
+
+$faye.add_extension(Archiver.new)   
+$faye.add_extension(ServerAuth.new)   
 #faye.add_extension(Formatter.new)
 
-run faye
+run $faye
 

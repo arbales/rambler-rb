@@ -3,9 +3,19 @@ get '/favicon.ico' do
   status 200
 end
 
-get '/' do      
-  @posts = Post.all.reverse
-  haml :test
+get '/' do   
+  @posts = Post.where(:channel => "/chat").limit(30).descending(:created_at)
+  haml :index
+end
+
+get '/mentions/:username' do
+  if params[:since] == 'false'
+    mentions = Post.where(:channel => "/mentions/#{params[:username]}")
+  else
+    mentions = Post.where(:channel => "/mentions/#{params[:username]}").where(:created_at.gt => params[:since])
+  end
+  content_type :json
+  mentions.to_json
 end
 
 get '/person/add/:name/:key' do

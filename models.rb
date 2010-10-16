@@ -7,12 +7,16 @@ end
 
 class Person
   include Mongoid::Document
+  include Mongoid::Timestamps
+  
   field :username
   field :key
+  field :last_seen
 end         
 
 class Post
   include Mongoid::Document
+  include Mongoid::Timestamps
   field :username
   field :channel
   field :text

@@ -3,6 +3,7 @@ html {
 	font-size:16px;
 	color:#999;
 	background:url('/images/pink_dot_bg.gif') repeat-x ;
+	overflow-y:scroll;
 }
 
 .header {
@@ -11,6 +12,22 @@ html {
   padding:2ex 2ex;
   margin-bottom:8ex;    
   border-top:4px solid rgba(0,0,0,.35);
+}
+
+.header h1 {
+  width:60%;
+  display:inline-block;
+  vertical-align:middle;
+}
+
+.header ul, .header ul li{
+  display:inline-block;
+  list-style-type:none;
+}
+
+.header ul li {
+  font-size:13px;
+  font-weight:bold;
 }
 
 .main_divider {
@@ -34,15 +51,27 @@ h2 {
 
 .messages p {
   font-size:22px;
-  padding:1ex .5ex;
-}       
+  padding:12px 8px;
+}   
+
+.messages p.command {
+  text-align:center;
+}    
+
+.messages p.command a {
+  color:#960042;
+  text-decoration:none;
+}
 
 .messages p img {
   max-height:200px;
   border:4px solid #fff;
   -webkit-box-shadow:rgba(0,0,0,.15) 0px 2px 4px 1px;
+  cursor:pointer;
 }  
+
 .messages p.persists-false {
+  opacity:.7;
   font-size:11px;
 }
      
@@ -76,6 +105,24 @@ input[type=button],input[type=submit],button{
               -webkit-background-clip: border-box;
 }
 
+li.mentions {
+  padding:8px 13px;
+  padding-bottom:9px;
+  background: -webkit-gradient(linear, left top, left bottom, from(rgba(255,255,255,.2)), to(rgba(255,255,255,.1)), color-stop(.05, rgba(255,255,255,.3)));
+              -webkit-background-clip: border-box;
+  text-shadow:rgba(0,0,0,.5) 0px 1px 1px;
+  border-radius:18px;
+  
+}
+
+li.mentions .count {
+  background-color:rgba(0,0,0,.4);
+  padding:3px;
+  padding-bottom:4px;
+  -webkit-border-radius:12px;
+  display:inline-block;
+}
+
 span.user {
   font-size:13px;
   display:inline-block;
@@ -85,6 +132,16 @@ span.user {
 .messages {
   float:left;
 }
+
+#mention_stream {
+  display:block;
+  position:absolute;
+  width:600px;
+  border:#960042 4px solid;
+  -webkit-border-radius:8px;
+  background-color:#F0EAD8;
+}
+
 
 .vspace {
   height:16px;
