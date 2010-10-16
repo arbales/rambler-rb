@@ -1,0 +1,20 @@
+%form.login.grid_10
+  =text_field_tag :username, :placeholder => "Type your name&hellip;"
+  =submit_tag "Say Hello"
+  
+%form.publisher.grid_10{style: "display:none"}
+  =text_field_tag :message, :placeholder => "Type what to share&hellip;"
+  =submit_tag "Post"
+
+.clear.vspace_2
+.main_divider
+.clear.vspace
+.scroller.grid_12
+  .messages#main_stream
+    - @posts.each do |post|
+      %p 
+        %span.user= "@" + post.username
+        = post.text
+.messages#mention_stream{style: 'display:none'}
+  %p.command
+    %a{href: '/mentions'} Load More
