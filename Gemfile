@@ -1,0 +1,10 @@
+source "http://rubygems.org"
+gem 'eventmachine'
+gem 'sinatra'     
+gem 'padrino-core'
+gem 'padrino-helpers'
+gem 'haml' 
+gem 'json'
+gem 'bcrypt-ruby'
+gem 'faye'
+gem 'mongoid'
