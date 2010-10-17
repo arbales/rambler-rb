@@ -2,7 +2,9 @@ $LOAD_PATH.unshift File.dirname(__FILE__) + '/sinatra/lib'
 $LOAD_PATH.unshift File.dirname(__FILE__)
 
 #require "sunshowers"
-require 'rubygems'
+require 'rubygems'    
+require "bundler/setup"
+
 require 'eventmachine'
 require 'sinatra'     
 #require 'padrino-core/application/rendering'
