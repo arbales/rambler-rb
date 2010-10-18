@@ -3,7 +3,7 @@ html {
 	font-size:16px;
 	color:#999;
 /*	background:url('/images/pink_dot_bg.gif') repeat-x ; */
-	background:url('/images/header-test.png') repeat-x ; 
+	background:url('/images/header-test.png') top center repeat-x ; 
 	overflow-y:scroll;
 }
 
@@ -15,7 +15,8 @@ html {
 
 .header h1 {
   width:60%;  
-	
+	position:relative;
+	bottom:2px;
   display:inline-block;
   vertical-align:middle;
 }
@@ -59,8 +60,7 @@ h2 {
 }
 
 .messages p, .listing p {
-  font-size:22px;
-  padding:12px 8px;
+  padding:1ex 8px;
 }   
 
 .messages p.command {
@@ -85,7 +85,7 @@ h2 {
 
 .messages p.persists-false {
   opacity:.7;
-  font-size:11px;
+  font-size:65%;
 }
      
 .messages p:nth-child(even), .listing p:nth-child(even){
@@ -178,11 +178,6 @@ span.user {
 	text-align:left;
 }                   
 
-.message span.user {
-	min-width:0px;
-	margin-right:50px;
-}
-
 span.short_list {
 	font-size:11px;
 	font-style:italic;
@@ -190,11 +185,13 @@ span.short_list {
 }
 
 .messages {
-  float:left;
+  font-size:22px;
+  line-height:1.3em;
+/*  float:left; */
 }   
         
 
-#mention_stream {
+.popup_stream {
   display:block;
   position:absolute;
   width:600px;
@@ -206,23 +203,27 @@ span.short_list {
   -webkit-border-radius:8px;
   background-color:#F0EAD8;     
   -webkit-box-shadow:rgba(0,0,0,.18) 0px 0px 8px 2px;
+}
+
+#main_stream {
+/*  border-right:1px solid rgba(0,0,0,.1);*/
 } 
 
 #secondary_streams {
 }
-#secondary_streams p{
+#secondary_streams .messages {
 	font-size:14px;
 }
-#secondary_streams span.user { 
+.messages span.user { 
 	display:inline-block;
-	width:25%;
+	width:20%;
 	margin:0px;
 	min-width:0px;
 }                  
-#secondary_streams span.text {
+.messages span.text {
 	vertical-align:top;
 	display:inline-block;
-	width:70%;
+	width:75%;
 }
 
 /*.subscription_list {
@@ -244,6 +245,10 @@ span.short_list {
 	font-weight:bold;
 }  */
 
+
+
+/* Move this stuff to another file. */
+
         
 /* Messaging */
 
@@ -260,6 +265,11 @@ span.short_list {
 } 
 
 #message p {width:88%;margin:auto;}
+
+.message span.user {
+	min-width:0px;
+	margin-right:50px;
+}
 
 .message {
  font-family:'Helvetica Neue', Helvetica, Arial;
@@ -374,7 +384,6 @@ text-shadow:rgb(0,0,0) 0px 0px 4px;
 	50% {opacity: .5; }
 	100% { background-position-x: 100%; opacity: 0;}
 }      
-
 .message .happy {
   display:inline-block;
   font-size:50%;
@@ -422,8 +431,6 @@ text-shadow:rgb(0,0,0) 0px 0px 4px;
 .EUWindow .contents { background-color: #ffffff; color:#fff;}
 .EUWindow h2 img.right, .EUWindow h2 .spinner { float: right; }
 .EUWindow .left { text-align: left; } 
-
-
 
 div.spinner {
   display:block;

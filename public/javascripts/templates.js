@@ -13,13 +13,52 @@ EUWindowArchive = {
 		options: {
 			onSubmit: function(event){
 				Event.stop(event); 
-				var el = event.findElement('.EUWindow');
+				var el = event.findElement('form');
+				var div = new Element('div', {'class':'messages'});
+				$('secondary_streams').insert(div);
 				var channel = el.down("input[type=text]").value;
-				ABApp.channels[channel] = new SubscriptionManager([channel], el);
+				ABApp.channels[channel] = new SubscriptionManager([channel], div);
+				EUWindow.destroyWindow(el.up(".EUWindow"));
 			}
 		}
 	}
-};                                 
+};  
+
+EUTemplateArchive = {
+  'stream_container': {
+    /*classNames: ['messages', 'popup_stream'],
+    type: 'div',
+    style: 'display:none',*/
+    template: "<div class='messages popup_stream' data-channel='{{channel}}' style='display:none'><p class='command'><a href='/{{channel}}'>Load More</a></p>"
+  } 
+}     
+
+EUTemplateWaker = {}
+EUTemplateWaker.wake = function(name, data){
+	var archive = EUTemplateArchive[name]; 
+	if (archive === undefined){
+	  throw("EUTemplateWaker: no template by name of " + name + " was found");
+		return false;
+	}
+	var compiled_template = function(name){
+		if (archive._template===undefined){
+			archive._template = Handlebars.compile(archive.template);
+		}                                                                                                          
+		return archive._template;
+	}
+	var hbs = function(name, data){
+  	return compiled_template(name)(data);
+	}                      
+	/*var el = new Element(archive.type, {'class':archive.classNames.join(" "), 'style':archive.style});
+	document.body.appendChild(el.update(hbs(name, data)));*/
+	var el_outer = new Element('div').update(hbs(name, data));
+	var el = el_outer.down('div');
+	document.body.insert(el);
+	setTimeout(function() {
+	  Event.addBehavior.reload();
+	}, 100);
+	return el;
+}                       
                
 // ## EUWindowWaker
 // The EUWindowWaker creates instances of EUWindows from the EUWindowArchive. Uses Handlebars.js

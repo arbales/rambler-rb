@@ -9,13 +9,9 @@
     - @posts.each do |post|
       %p 
         %span.user= post.username 
-        = post.text
-.grid_4#secondary_streams
+        %span.text= post.text
+.grid_5#secondary_streams
   .messages
     %p
       %span.user audree
       %span.text Remember to submit your timesheets to openair.
-  
-.messages#mention_stream{style: 'display:none'}
-  %p.command
-    %a{href: '/mentions'} Load More

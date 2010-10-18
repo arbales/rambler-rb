@@ -94,11 +94,12 @@ var MentionHandler = {
         message.data && 
         message.data.persists != 'false')
     {
-      var mentions = $$('.mentions .count').first();
-      var count = parseInt(mentions.innerHTML) || 0;
-      count++;   
+//      var mentions = $$('.mentions .count').first();
+//      var count = parseInt(mentions.innerHTML) || 0;
+//      count++;   
+      ABApp.channels['mentions/'+ABApp.sharedStorageManager().get('username')].incrementCounter();
 			new ABMessage("<span class='user'>"+message.data.username+" mentioned you&hellip;</span>"+message.data.text, {timeout: 10});
-      mentions.update(count).addClassName('new');
+      //mentions.update(count).addClassName('new');
     }
     callback(message); 
     return null;
@@ -134,12 +135,114 @@ def ("SubscriptionManager")({
   // * element (optional): an _Element_ for the messages to be inserted into.
   init: function(channels, element){
     var self = this; // Shouldn't I just bind functions to the contexts I'm working with :)
+    self.hooks = {};
     self.element = element || null;
+    if (self.element){
+      self.element.writeAttribute('data-channel', channels[0]);
+    }
     self.channels = channels;
     self.subscriptions = self.channels.collect(function(channel){
       return ABApp.stream.client.subscribe("/"+channel, function(message){self.receive(message);});
     });
-  },      
+    return this;
+  },  
+  // Creates an `Element` from a template and readys it for use with a stream. 
+  createStreamContainer: function(options){
+    var data = {};
+    data.channel = this.channels[0];
+    this.element = EUTemplateWaker.wake('stream_container', data);
+    return this;
+  },
+  // Add a function to `ubscriptionManager` to call at a given point. 
+  // Hooks include:
+  // * `pullComplete` called after a `pull` operation is completed. 
+  // * `pullSuccess` called after a _successful_ `pull` operation.
+  // * `pullBegin` called when a `pull` begins.
+  // * `pulledContent` after a `pull` has updated content. 
+  addHook: function(name, fun){
+    this.hooks[name] = fun;
+    return this;
+  },
+  // Registers an element to track incoming messages.
+  // If the element has a `.count` child, it will be registered
+  // as the channel's counter.
+  registerTracker: function(element){
+    this.tracker = element.writeAttribute('data-channel', this.channels[0]);
+    if (this.tracker.down('.count')){
+      this.registerCounter(this.tracker.down('.count'));
+    }
+    return this;
+  },
+  registerCounter: function(element){
+    this.counter = element;
+    return this;
+  },  
+  updateCounter: function(value){
+    var counter = this.getCounter();
+    if (counter){
+      counter.update(value);
+    }
+    return this;
+  },
+  getCounter: function(){
+    if (this.counter != undefined){
+      return this.counter;
+    }else{
+      return false;
+    }
+  },
+  incrementCounter: function(){
+    var counter = this.getCounter();
+    if (counter){
+      var count = parseInt(counter.innerHTML) || 0;
+      count++;
+      counter.update(count);
+    }
+  },
+  // Uses XHR to pull messages from the server, optionally updating the counter and stream element if they exist.
+  pull: function(options){
+    var _onComplete = this.hooks['pullComplete'] || function(transport){};
+    var _onSuccess = this.hooks['pullSuccess'] || function(transport){};
+    var _onBegin = this.hooks['pullBegin'] || function(transport){};
+    var _onContentInserted = this.hooks['pulledContent'] || function(transport){};
+    
+    if (options && options.since){
+      var date = options.since
+    } else {
+      var date = ABApp.sharedStorageManager().get('channel:'+self.channels[0].sub("/","_",5)+':pull');
+    }
+    
+    var self = this;
+
+    _onBegin.bind(this)();
+
+/*    var counter = $$('.'+channel_name+' .counter').first(); */
+   
+/*    this.update("Please wait&hellip;");
+    el.update("you're seeing everything").addClassName('inactive'); */    
+    
+    new Ajax.Request("/"+self.channels[0], {
+      method: 'get',
+      parameters: {since: date},
+      onSuccess: function(transport){
+        var data = transport.responseText.evalJSON();
+        data.each(function(message){
+          self.incrementCounter();
+          self.receive(message);
+        });
+        
+        var ndate = new Date();
+        ABApp.sharedStorageManager().set('channel:'+self.channels[0].sub("/","_",5)+':pull', ndate.toString());
+        
+        if (data.size() > 0){
+          _onContentInserted.bind(this)();
+        }
+        _onSuccess.bind(this, transport)();
+      },
+      onComplete: _onComplete.bind(this)
+    });
+    return this;
+  }, 
   // Stop receiving messages on this channel.
   cancel: function(){this.subscription.cancel();},
   getUsername: function(){return ABApp.sharedStorageManager().get('username');},
@@ -147,19 +250,19 @@ def ("SubscriptionManager")({
   // log the message.
   // *TODO* persist undisplayed messages in localStorage for later display.
   receive: function(message){    
-    if (this.element != null){
+    if (this.element){
       var el = new Element("p");
       if (message.persists == 'false'){el.addClassName("persists-false");}
 
       this.element.insert(
-        {top: el.update("<span class='user'>@" + message.username + "</span>" + message.text)
+        {top: el.update("<span class='user'>" + message.username + "</span><span class='text'>" + message.text+"</span>")
                   .hide()
                   .appear()
         });      
         
       Event.addBehavior.reload.defer(); 
     }else{
-      console.log("Unrouted Message:" + message.text);
+      /*console.log("Unrouted Message:" + message.text);*/
     }
   },  
   // Send text to the server for publishing.
@@ -236,6 +339,7 @@ def("WindowManager")({
 			this.element = $('app_element');
 		}
   },
+  // Add a window to the pool.
   add: function(instance){
     var key = ABApp.generate_uuid();
     this.pool.set(key, instance);      
@@ -254,13 +358,11 @@ def("WindowManager")({
 document.observe('dom:loaded', function(){
   document.stopObserving('dom:loaded');   
 
-
-	window.onresize = ABMessageResizer;
-	
+	window.onresize = ABMessageResizer;	
 	window.onscroll = ABMessageResizer;
                                           
   // Setup the Faye client.
-  ABApp.stream.client = new Faye.Client('http://bubbles.local/faye');
+  ABApp.stream.client = new Faye.Client('http://desk.austinbales.com/faye');
   
   // Add extensions
   ABApp.stream.client.addExtension(ClientAuth); 
@@ -331,53 +433,35 @@ document.observe('dom:loaded', function(){
     },    
     
     // Open the mentions panel.
-    "li.mentions:click":function(){
+    "li.tracker:click":function(){
       var self = this;
-      Element.clonePosition($('mention_stream'), self, {
+      var channel = this.readAttribute('data-channel');
+      var stream_element = ABApp.channels[channel].element;
+      
+      // Clones the position of the tracker onto the stream container.
+      Element.clonePosition(stream_element, self, {
         setWidth:false,
         setHeight:false,
         offsetTop: 45,
         offsetLeft: -255});
-        
+      
+      // Updates visual states.  
       if (self.hasClassName('active')){
 				self.removeClassName('active');
-				this.down('.count').update("0").removeClassName("new");
+				self.down('.count').update("0").removeClassName("new");
 				}
       else{    
-				this.down('.count').update("0").removeClassName("new");
+				self.down('.count').update("0").removeClassName("new");
 				self.addClassName('active');
 			}
       
-      $('mention_stream').toggle();
+      stream_element.toggle();
     },         
     // Load additional mentions.
-    "#mention_stream .command a:click":function(event){
+    ".popup_stream .command a:click":function(event){
       Event.stop(event);
-      var date = ABApp.sharedStorageManager().get('last_mention_pull');
-                
-      var self = this;
-      var mentions = $$('.mentions .count').first();
-      var count = parseInt(mentions.innerHTML) || 0;
-     
-      this.update("Please wait&hellip;");
-      
-      new Ajax.Request("/mentions/"+ABApp.sharedStorageManager().get('username'), {
-        method: 'get',
-        parameters: {since: date},
-        onSuccess: function(transport){
-          var data = transport.responseText.evalJSON();
-          data.each(function(message){
-            count++;
-            mentions.update(count).addClassName('new');
-            ABApp.channels['mentions'].receive(message);
-          });
-          var date = new Date();
-          ABApp.sharedStorageManager().set('last_mention_pull', date.toString());
-        }, 
-        onComplete: function(){
-          self.update("you're seeing everything").addClassName('inactive');
-        }
-      });
+      var channel_name = this.up('.messages').readAttribute("data-channel");
+      ABApp.channels[channel_name].pull();      
     },            
     
     "form.remote:submit":function(event){
@@ -418,7 +502,6 @@ document.observe('dom:loaded', function(){
       $$('.login').first().fade();
       $$('form.publisher').first().appear();
     }
-  }
       
   //
   // This checks to see if there are any mentions in the mention stream container.
@@ -426,34 +509,25 @@ document.observe('dom:loaded', function(){
   // the user pulled from this browser. Presently the server does not persist
   // a user's access history, although that is also planned. 
   // 
-  if($('mention_stream').childElements().size() == 1){
-    var date = ABApp.sharedStorageManager().get('last_mention_pull');
-    
-    var mentions = $$('.mentions .count').first();
-    var count = parseInt(mentions.innerHTML) || 0;
-    
-    new Ajax.Request("/mentions/"+ABApp.sharedStorageManager().get('username'), {
-      method: 'get',
-      parameters: {since: date},
-      onSuccess: function(transport){
-        var data = transport.responseText.evalJSON();  
-        if (data.size() > 0){
-//          Sound.play('/NewMail.aiff');
-        }
-        data.each(function(message){
-          count++;
-          mentions.update(count).addClassName('new');
-          ABApp.channels['mentions'].receive(message);
-        });
-        var date = new Date();
-        ABApp.sharedStorageManager().set('last_mention_pull', date.toString());
-      }, 
-    });
-  }
   
   //  Create an instance of SubscritionManager to watch for and handle mentions.
-  ABApp.channels['mentions'] = new SubscriptionManager(['mentions/'+ABApp.sharedStorageManager().get('username')],
-                                              $('mention_stream'));
+      ABApp.channels['mentions/'+ABApp.sharedStorageManager().get('username')] = new SubscriptionManager(['mentions/'+ABApp.sharedStorageManager().get('username')]);
+      ABApp.channels['mentions/'+ABApp.sharedStorageManager().get('username')]
+          // Register a tracker element for the channel.
+          .registerTracker($$('.mentions.tracker').first())
+          // This creates an element from an HBS template that handles the streams.
+          .createStreamContainer({'style':'display:none'})
+          // We want to add specific behavior for the beginning of this pull.
+          // This stuff should be abstracted into a module, since it applies to any streams with a reload button.
+          .addHook('pullBegin', function(){
+            this.element.down(".command a").update("Fetching mentions&hellip;");})
+          .addHook('pullComplete', function(){
+            this.element.down(".command a").update("Load More");})
+          .addHook('pulledContent', function(){
+            this.getCounter().addClassName('new');})
+          // This pulls content from the stream that was published since the last time we checked. 
+          .pull();                                            
+  } // End of if logged in block.
   
 });
 
