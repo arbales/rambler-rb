@@ -21,22 +21,29 @@ not_found do
 end
 
 get '/' do   
-  @posts = Post.where(:channel => "/chat").limit(30).descending(:created_at)
+  @posts = Post.where(:channel => "/chat")
+               .limit(30)
+               .descending(:created_at)
   haml :index         
 end
 
 get '/mentions/:username' do
   if params[:since] == 'false'
-    mentions = Post.where(:channel => "/mentions/#{params[:username]}").descending(:created_at)
+    mentions =  Post.where(:channel => "/mentions/#{params[:username]}")
+                    .descending(:created_at)
   else
-    mentions = Post.where(:channel => "/mentions/#{params[:username]}").where(:created_at.gt => params[:since]).limit(30).descending(:created_at)
+    mentions =  Post.where(:channel => "/mentions/#{params[:username]}")
+                    .where(:created_at.gt => params[:since])
+                    .limit(30)
+                    .descending(:created_at)
   end
   content_type :json
   mentions.to_json
 end
 
 get '/person/add/:name/:key' do
-  person = Person.create(:username => params[:name], :key => Digest::SHA1.hexdigest(params[:key]))
+  person = Person.create(:username => params[:name],
+                         :key => Digest::SHA1.hexdigest(params[:key]))
 end  
 
 get '/people' do
@@ -56,13 +63,25 @@ end
 get '/channels' do
   @channels = Channel.all
   haml :channels
-end             
+end    
+
+get '/channels/destroy' do
+  Channel.all.destroy_all
+end        
 
 post '/channels' do        
   input = params[:channel]                     
-  owner = Person.where(username: input['owner']).limit(1)                                
-  allowed_users = input['allowed_users'].sub("@", "").strip().split(",")
-  channel = Channel.create(name: input[:name], person: owner, allowed_users: allowed_users)  
+  
+  owner = Person.first(conditions: {username: input['owner'].sub("@","")})
+                                 
+  allowed_users = input['allowed_users'].strip()
+                                        .split(",")
+                                        .map do |u|; u.sub("@", ""); end
+                                        
+  channel = Channel.create(name: input[:name],
+                           person: owner,
+                           allowed_users: allowed_users)  
+
   # Add model validation to protect /meta, /mentions, and /people channels
   abmessage :success, "Your channel was created."
 end 
@@ -72,7 +91,7 @@ get '/channel/destroy/:id' do
   @id = params[:id]
   haml :destroy_confirm, layout: !
   request.xhr?
-end
+end  
 
 get '/token/:username' do
   person = Person.first(:conditions => { :username => params[:username]})     

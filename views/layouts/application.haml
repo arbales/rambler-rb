@@ -6,7 +6,7 @@
       =javascript_include_tag 'deploy.js'
     - else
       =stylesheet_link_tag 'reset', 'grid', 'style'
-      = javascript_include_tag '/faye.js','def', 'sha1','prototype.s2.min', 'euwindow', 'abmessage', 'lowpro','app'
+      = javascript_include_tag '/faye.js','def', 'sha1','prototype.s2.min','handlebars','templates','euwindow', 'abmessage', 'lowpro','app'
 
 %body
   =flash_tag(:success, :class => 'message success', :id => 'flash-success')
@@ -19,11 +19,15 @@
     .grid_12.header
       %h1
         %a{href: '/'}
-          %img{src: '/images/output.c.png', alt: "Rambler"}
-      %ul
-        %li.mentions
-          mentions
-          %span.count 0
+          %img{src: '/images/logo_2.png', alt: "Rambler"}
+      .nav>
+        %ul>
+          %li.mentions.tracker>
+            mentions
+            %span.count> 0  
+          %li.channel.tracker>
+            red
+            %span.count> 0      
     .clear.vspace_2
     =yield
 

@@ -1,0 +1,6 @@
+.widget.mod
+  %form.remote.closes{action: "/#{@model}/#{@id}"}
+    %h2 Are you sure you want to destroy this #{@model}?
+    %p.action_bar
+      %button.nevermind Nevermind
+      =submit_tag "Destroy Forever"

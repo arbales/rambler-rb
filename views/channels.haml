@@ -1,0 +1,17 @@
+%form.remote{action: "/channels", method: 'post'}
+  = text_field_tag 'channel[name]', placeholder: "Channel Name"
+  = text_field_tag 'channel[owner]', placeholder: "Owner @you"
+  = text_field_tag 'channel[allowed_users]', placeholder: "Allowed Users (@you, @friend, @frenemy)"
+  = submit_tag 'Save Channel'
+
+.listing
+  - @channels.each do |channel|
+    %p
+      %span.user
+        = channel.person.username
+      %span.channel_name
+        = channel.name
+      %span.short_list
+        = channel.allowed_users.join(", ")
+      %a.popup{href: "/channel/destroy/#{channel.id}"} Delete
+    

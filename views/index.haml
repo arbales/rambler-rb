@@ -1,20 +1,21 @@
-%form.login.grid_10
-  =text_field_tag :username, :placeholder => "Type your name&hellip;"
-  =submit_tag "Say Hello"
-  
-%form.publisher.grid_10{style: "display:none"}
-  =text_field_tag :message, :placeholder => "Type what to share&hellip;"
-  =submit_tag "Post"
+%form.publisher.grid_12
+  =text_field_tag :message, :placeholder => "Say something&hellip;"
 
-.clear.vspace_2
+.clear.vspace_3
 .main_divider
 .clear.vspace
-.scroller.grid_12
+.scroller.grid_7
   .messages#main_stream
     - @posts.each do |post|
       %p 
-        %span.user= "@" + post.username 
+        %span.user= post.username 
         = post.text
+.grid_4#secondary_streams
+  .messages
+    %p
+      %span.user audree
+      %span.text Remember to submit your timesheets to openair.
+  
 .messages#mention_stream{style: 'display:none'}
   %p.command
     %a{href: '/mentions'} Load More

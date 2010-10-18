@@ -1,9 +1,12 @@
 // ## ABApp
 // ABApp is the main application namespace. Its typically customized
 // on a per-application basis.
-   
+if (ABApp === undefined){
+	ABApp = {};
+}
 var ABApp = {
-  stream: {},  
+  stream: {},   
+	channels: {},
   cache: $H(), 
 
   //  Returns the shared instance of the StorageManager for interacting with the HTML5 localStorage API.  
@@ -59,7 +62,7 @@ ClientAuth = {
     if (message.channel == '/meta/subscribe'){
       message.ext = {};
       message.ext.authToken = ABApp.sharedStorageManager().get('token');
-      message.ext.authUser = ABApp.sharedStorageManager().get('user');
+      message.ext.authUser = ABApp.sharedStorageManager().get('username');
     }                      
     callback(message);
   },      
@@ -68,11 +71,11 @@ ClientAuth = {
   incoming: function(message, callback){
     if (message.channel == "/meta/subscribe" && message.successful == false){
       message.text = message.error;  
-      ABApp.chat_sub.receive(message);
+      ABApp.channels['chat'].receive(message);
     } else if (message.channel == "/meta/subscribe" && message.successful == true){
       ABApp.stream.client.publish(message.subscription[0], {
         text:(" joined the conversation on " + message.subscription[0]), 
-        username: ABApp.chat_sub.getUsername(), 
+        username: ABApp.channels['chat'].getUsername(), 
         persists: "false"});
     }
     callback(message);
@@ -93,7 +96,8 @@ var MentionHandler = {
     {
       var mentions = $$('.mentions .count').first();
       var count = parseInt(mentions.innerHTML) || 0;
-      count++;
+      count++;   
+			new ABMessage("<span class='user'>"+message.data.username+" mentioned you&hellip;</span>"+message.data.text, {timeout: 10});
       mentions.update(count).addClassName('new');
     }
     callback(message); 
@@ -236,7 +240,7 @@ def("WindowManager")({
     var key = ABApp.generate_uuid();
     this.pool.set(key, instance);      
     
-    instance.euwindow.writeAttribute('data-eid', key);
+    instance.element.writeAttribute('data-eid', key);
   },                              
   recall: function(element){
     var id = element.readAttribute('data-eid');
@@ -248,7 +252,12 @@ def("WindowManager")({
 
 // Wait for the document to be ready.
 document.observe('dom:loaded', function(){
-  document.stopObserving('dom:loaded');
+  document.stopObserving('dom:loaded');   
+
+
+	window.onresize = ABMessageResizer;
+	
+	window.onscroll = ABMessageResizer;
                                           
   // Setup the Faye client.
   ABApp.stream.client = new Faye.Client('http://bubbles.local/faye');
@@ -265,13 +274,13 @@ document.observe('dom:loaded', function(){
       Event.stop(event);      
       var el = this.down("input[type=text]");
       var username = $F(el).toLowerCase();
-      ABApp.chat_sub = new SubscriptionManager("chat", $('main_stream'));
+      ABApp.channels['chat'] = new SubscriptionManager("chat", $('main_stream'));
 
       this.fade(/*{duration:.25, queue:'end'}*/);
       $$('form.publisher').first().appear();
       
       window.onbeforeunload = function (){
-        return ABApp.chat_sub.send("left the chat.");
+        return ABApp.channels['chat'].send("left the chat.");
       }
       
     },         
@@ -279,7 +288,7 @@ document.observe('dom:loaded', function(){
     "form.publisher:submit":function(event){
       Event.stop(event);
       var el = this.down('input[type=text]');
-      ABApp.chat_sub.send($F(el));
+      ABApp.channels['chat'].send($F(el));
       el.clear();
     }, 
     "form.publisher input[type=text]:drop":function(event){
@@ -300,7 +309,10 @@ document.observe('dom:loaded', function(){
         el.fade({duration:.25});
         orig.morph("opacity:1",{duration:.25});
       })
-    },     
+    }, 
+    "form.publisher input[type=text]:keypress":function(event){
+	  	console.log(event.keyCode);
+		},
     // Save the auth token.
     // * To be replaced by actual login system.
     "form.save_auth_token:submit":function(event){     
@@ -324,11 +336,17 @@ document.observe('dom:loaded', function(){
       Element.clonePosition($('mention_stream'), self, {
         setWidth:false,
         setHeight:false,
-        offsetTop: 35,
+        offsetTop: 45,
         offsetLeft: -255});
         
-      if (self.hasClassName('active')){self.removeClassName('active');}
-      else{self.addClassName('active');}
+      if (self.hasClassName('active')){
+				self.removeClassName('active');
+				this.down('.count').update("0").removeClassName("new");
+				}
+      else{    
+				this.down('.count').update("0").removeClassName("new");
+				self.addClassName('active');
+			}
       
       $('mention_stream').toggle();
     },         
@@ -351,7 +369,7 @@ document.observe('dom:loaded', function(){
           data.each(function(message){
             count++;
             mentions.update(count).addClassName('new');
-            ABApp.metion_sub.receive(message);
+            ABApp.channels['mentions'].receive(message);
           });
           var date = new Date();
           ABApp.sharedStorageManager().set('last_mention_pull', date.toString());
@@ -395,7 +413,7 @@ document.observe('dom:loaded', function(){
                                  
   // Automatically logs a user in if their token is saves.
   if (ABApp.sharedStorageManager().get('username') != ""){
-    ABApp.chat_sub = new SubscriptionManager(["chat"], $('main_stream'));  
+    ABApp.channels['chat'] = new SubscriptionManager(["chat"], $('main_stream'));  
     if ($$('.login').size() > 0){
       $$('.login').first().fade();
       $$('form.publisher').first().appear();
@@ -420,12 +438,12 @@ document.observe('dom:loaded', function(){
       onSuccess: function(transport){
         var data = transport.responseText.evalJSON();  
         if (data.size() > 0){
-          Sound.play('/NewMail.aiff');
+//          Sound.play('/NewMail.aiff');
         }
         data.each(function(message){
           count++;
           mentions.update(count).addClassName('new');
-          ABApp.metion_sub.receive(message);
+          ABApp.channels['mentions'].receive(message);
         });
         var date = new Date();
         ABApp.sharedStorageManager().set('last_mention_pull', date.toString());
@@ -434,7 +452,7 @@ document.observe('dom:loaded', function(){
   }
   
   //  Create an instance of SubscritionManager to watch for and handle mentions.
-  ABApp.metion_sub = new SubscriptionManager(['mentions/'+ABApp.sharedStorageManager().get('username')],
+  ABApp.channels['mentions'] = new SubscriptionManager(['mentions/'+ABApp.sharedStorageManager().get('username')],
                                               $('mention_stream'));
   
 });

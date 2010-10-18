@@ -1,12 +1,17 @@
 GEM
   remote: http://rubygems.org/
   specs:
+    activemodel (3.0.1)
+      activesupport (= 3.0.1)
+      builder (~> 2.1.2)
+      i18n (~> 0.4.1)
     activesupport (3.0.1)
     addressable (2.2.2)
     bcrypt-ruby (2.1.2)
     bson (1.1.1)
+    bson_ext (1.1.1)
+    builder (2.1.2)
     daemons (1.1.0)
-    durran-validatable (2.0.1)
     em-http-request (0.2.14)
       addressable (>= 2.0.0)
       eventmachine (>= 0.12.9)
@@ -23,14 +28,13 @@ GEM
       url_mount (>= 0.2.1)
     i18n (0.4.1)
     json (1.4.6)
-    leshill-will_paginate (2.3.11)
-    mongo (1.1.1)
-      bson (>= 1.1.1)
-    mongoid (1.0.6)
-      activesupport (>= 2.2.2)
-      durran-validatable (>= 2.0.1)
-      leshill-will_paginate (>= 2.3.11)
-      mongo (>= 0.18.2)
+    mongo (1.0.9)
+      bson (>= 1.0.5)
+    mongoid (2.0.0.beta.19)
+      activemodel (~> 3.0)
+      mongo (= 1.0.9)
+      tzinfo (~> 0.3.22)
+      will_paginate (~> 3.0.pre)
     padrino-core (0.9.18)
       activesupport (>= 3.0.0)
       http_router (~> 0.4.0)
@@ -51,17 +55,20 @@ GEM
     tzinfo (0.3.23)
     url_mount (0.2.1)
       rack
+    will_paginate (3.0.pre2)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   bcrypt-ruby
+  bson_ext (= 1.1.1)
   eventmachine
   faye
   haml
   json
-  mongoid
+  mongo (= 1.0.9)
+  mongoid (= 2.0.0.beta.19)
   padrino-core
   padrino-helpers
   sinatra
