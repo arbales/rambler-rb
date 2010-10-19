@@ -1,4 +1,5 @@
 %form.save_auth_token
-  =text_field_tag :username, :value => params[:username], :readonly => true
+  =text_field_tag :userid, :value => @person.id, :readonly => true
+  =text_field_tag :username, :value => @person.username, :readonly => true
   =text_field_tag :token, :value => @token, :readonly => true
   =submit_tag "Save Token"

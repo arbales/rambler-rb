@@ -2,13 +2,31 @@
 
 // Wait for the document to be ready.
 document.observe('dom:loaded', function(){
+
+	ABApp.behaviors['SubscriptionManager#popstream'] = function(){
+		return (this
+    // We want to add specific behavior for the beginning of this pull.
+    // This stuff should be abstracted into a module, since it applies to any streams with a reload button.
+		.addHook('pullBegin', function(){
+      this.element.down(".command a").update("Fetching messages&hellip;");})
+    .addHook('pullComplete', function(){
+      this.element.down(".command a").update("Load More");})
+    .addHook('pull500', function(){
+      this.element.down(".command").update("Unable to connect to archive.");
+    })
+    .addHook('pulledContent', function(){
+      this.getCounter().addClassName('new');})
+		.pull()
+		);
+	};
+	
   document.stopObserving('dom:loaded');   
 
 	window.onresize = ABMessageResizer;	
 	window.onscroll = ABMessageResizer;
                                           
   // Setup the Faye client.
-  ABApp.stream.client = new Faye.Client('http://desk.austinbales.com/faye');
+  ABApp.stream.client = new Faye.Client('http://bubbles.local/faye');
   
   // Add extensions
   ABApp.stream.client.addExtension(ClientAuth); 
@@ -20,8 +38,10 @@ document.observe('dom:loaded', function(){
     var el =$$('.save_auth_token').first();
     var token = $F(el.down("input[type=text][name=token]"));
     var username = $F(el.down("input[type=text][name=username]"));
+    var userid = $F(el.down("input[type=text][name=userid]"));
     ABApp.sharedStorageManager().set('token', token);
     ABApp.sharedStorageManager().set('username', username);
+    ABApp.sharedStorageManager().set('userid', userid);
 
     window.location.href = "/";
   }     
@@ -108,15 +128,26 @@ document.observe('dom:loaded', function(){
       ABApp.channels[channel].showStreamContainer(self);
     },         
     // Load additional mentions.
-    ".popup_stream .command a:click":function(event){
+    ".command a.pull:click":function(event){
       Event.stop(event);
       var channel_name = this.up('.messages').readAttribute("data-channel");
       ABApp.channels[channel_name].pull();      
     },            
-    
+    ".command a.focus:click":function(event){
+      Event.stop(event);
+      var channel_name = this.up('.messages').readAttribute("data-channel");
+			var old_channel_name = $('main_stream').readAttribute("data-channel");
+			ABApp.channels[old_channel_name].createTracker().createStreamContainer().addBehavior("popstream");
+			ABApp.channels[channel_name].unregisterElements().setStreamContainer($('main_stream'));
+			//ABApp.channels[channel_name].unregisterTracker().swapStreamContainers(ABApp.channels[old_channel_name].createTracker());
+			Event.addBehavior.reload();
+		},
     "form.remote:submit":function(event){
 			Event.stop(event);
       var self = this;
+			$$("#" + self.identify() + ' input.from_ls').each(function(s){ 
+				s.value = ABApp.sharedStorageManager().get(s.readAttribute('name'));
+			});
 			self.request({
 				onSuccess: function(transport){          
 				  if (self.hasClassName('closes')){
@@ -163,20 +194,13 @@ document.observe('dom:loaded', function(){
   //  Create an instance of SubscritionManager to watch for and handle mentions.
       ABApp.channels['mentions/'+ABApp.sharedStorageManager().get('username')] = new SubscriptionManager(['mentions/'+ABApp.sharedStorageManager().get('username')]);
       ABApp.channels['mentions/'+ABApp.sharedStorageManager().get('username')]
-          // Register a tracker element for the channel.
-          .registerTracker($$('.mentions.tracker').first())
-          // This creates an element from an HBS template that handles the streams.
-          .createStreamContainer({'style':'display:none'})
-          // We want to add specific behavior for the beginning of this pull.
-          // This stuff should be abstracted into a module, since it applies to any streams with a reload button.
-          .addHook('pullBegin', function(){
-            this.element.down(".command a").update("Fetching mentions&hellip;");})
-          .addHook('pullComplete', function(){
-            this.element.down(".command a").update("Load More");})
-          .addHook('pulledContent', function(){
-            this.getCounter().addClassName('new');})
-          // This pulls content from the stream that was published since the last time we checked. 
-          .pull();                                            
+					 .aka('mentions')
+					 // Register a tracker element for the channel.
+			     .createTracker()
+			     // This creates an element from an HBS template that handles the streams.
+			     .createStreamContainer()
+					 .addBehavior('popstream');
+                                            
     SubscriptionWaker();
   }
   

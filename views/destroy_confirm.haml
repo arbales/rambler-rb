@@ -1,5 +1,5 @@
 .widget.mod
-  %form.remote.closes{action: "/#{@model}/#{@id}"}
+  %form.remote.closes{action: "/#{@model}/#{@id}", method:'delete'}
     %h2 Are you sure you want to destroy this #{@model}?
     %p.action_bar
       %button.nevermind Nevermind

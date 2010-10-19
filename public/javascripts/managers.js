@@ -71,10 +71,40 @@ def ("SubscriptionManager")({
       ABApp.sharedStorageManager().set('channels:remembered', string);
     }
     return this;
-  },
+  },   
+  swapStreamContainers: function(subs){   
+		var old_el = this.element;
+		old_el.removeAttribute('data-channel');
+		old_el.writeAttribute('data-channel', subs.channels[0]);
+		this.element = subs.element;           
+		this.element.removeAttribute('data-channel');
+		this.element.writeAttribute('data-channel', this.channels[0]);
+		subs.element = old_el;
+		
+		var subs_ems = this.element.innerHTML;
+		var my_ems = subs.element.innerHTML;        
+		
+		this.element.update(my_ems);
+		subs.element.update(subs_ems);
+//		subs.element.insert({top:subs_ems});
+    return this;
+	},                                                                        
+	setStreamContainer: function(element){  
+		if (this.element != undefined){
+			var content = this.element.innerHTML;
+		}else{var content = false;}
+		this.element = element;
+		this.element.writeAttribute('data-channel', this.channels[0]);
+//		this.element.select("p:not(.command)").invoke('remove').invoke();
+		if (content){this.element.update(content);}
+		return this;
+	},
   // Creates an `Element` from a template and readys it for use with a stream. 
   createStreamContainer: function(options){
-    var data = {};
+    var data = {}; 
+		if (this.element != undefined){
+			data.contents = this.element.innerHTML;
+		}
     data.channel = this.channels[0];
     this.element = EUTemplateWaker.wake('stream_container', data);
     return this;
@@ -115,14 +145,14 @@ def ("SubscriptionManager")({
     return ((this.hooks[name]) ? this.hooks[name] : function(){});
   },
   createTracker: function(){
-		var tracker = new Element("li").update(this.channels[0] + " <span class='count'>0</span>");
+		var tracker = new Element("li").update(this.getName() + " <span class='count'>0</span>");
 		$$('.nav ul').first().insert(tracker);
 		this.registerTracker(tracker);
 		return this;
   },
   // Registers an element to track incoming messages.
   // If the element has a `.count` child, it will be registered
-  // as the channel's counter.
+  // as the channel's counter.               
   registerTracker: function(element){
     this.tracker = element;
     this.tracker.writeAttribute('data-channel', this.channels[0]);
@@ -133,7 +163,27 @@ def ("SubscriptionManager")({
       this.tracker.addClassName('tracker');
     }
     return this;
-  },
+  }, 
+  unregisterTracker: function(){
+		if (this.tracker != undefined){
+			this.tracker.removeAttribute('data-channel');
+			this.counter = false;
+			this.tracker.fade().remove();
+			this.tracker = false;			
+		}      
+		return this;
+	},            
+	unregisterStreamContainer: function(){
+		if (this.element != undefined){
+			this.element.removeAttribute('data-channel');
+			this.element.fade().remove();
+			this.element = false;
+		}   
+		return this;
+	},  
+	unregisterElements: function(){
+		return this.unregisterTracker().unregisterStreamContainer();
+	},
   registerCounter: function(element){
     this.counter = element;
     return this;
@@ -244,12 +294,32 @@ def ("SubscriptionManager")({
   // Send text to the server for publishing.
   send: function(send_text){
     ABApp.stream.client.publish("/"+this.channels[0], {text: send_text, username: this.getUsername()});
-  },
+  },   
+	aka: function(name){ 
+		this.alias = name;
+	 	return this;
+	},
+	getName: function(){
+		if (this.alias != undefined){
+			return this.alias;
+		}else{
+			return this.channels[0];
+		}
+	},	
+  addBehavior: function(name){
+	  if (ABApp.behaviors['SubscriptionManager#'+name]){
+			behavior = ABApp.behaviors['SubscriptionManager#'+name]
+			return behavior.bind(this)();
+ 		}else{         
+			throw("SubscriptionManager#addBehavior("+name+") that behavior is not available.");
+			return false;
+		}
+	}
 });   
 
 def ("SidebarManager") << SubscriptionManager ({
   createTracker: function(){
-		var tracker = new Element("li").update(this.channels[0] + " <span class='count'>0</span>");
+		var tracker = new Element("li").update(this.getName() + " <span class='count'>0</span>");
 		$$('.sidebars ul').first().insert(tracker);
 		this.registerTracker(tracker);
 		return this;
@@ -280,8 +350,8 @@ def ("SidebarManager") << SubscriptionManager ({
     var memory = ABApp.sharedStorageManager().get('sidebars:remembered');
     if (memory){
       var mem_a = memory.split(",");
-      if (!mem_a.include(this.channel[0])){
-        mem_a.push(this.channel[0]);
+      if (!mem_a.include(this.channels[0])){
+        mem_a.push(this.channels[0]);
       }
       ABApp.sharedStorageManager().set('sidebars:remembered', mem_a.join(","));
     }else{

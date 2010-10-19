@@ -13,8 +13,8 @@ html {
 
 .header {
   color:#fff;
-  padding:4ex 2ex 0ex;
-  margin-bottom:9ex;    
+  padding:4ex 0ex 0ex;
+  margin-bottom:3ex;    
 }
 
 .header h1 {
@@ -225,12 +225,12 @@ span.short_list {
   position:absolute;
   width:600px;
   border:#960042 4px solid;        
-	background-clip:padding-box;
 	-webkit-background-clip:padding-box;
 	-moz-background-clip:padding-box;
 	border:rgba(0,0,0,.35) 4px solid;
   -webkit-border-radius:8px;
-  background-color:#F0EAD8;     
+  background:#F0EAD8 url('/images/dialogbg.png');
+	background-clip:padding-box;
   -webkit-box-shadow:rgba(0,0,0,.18) 0px 0px 8px 2px;
 }
 

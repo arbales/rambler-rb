@@ -73,6 +73,11 @@ end
 
 get '/posts/destroy' do
   Post.all.destroy_all
+end  
+
+delete '/channel/:id' do
+  channel = Channel.criteria.id(params[:id])    
+  channel.id
 end
 
 get '/channels' do
@@ -82,19 +87,32 @@ end
 
 get '/channels/destroy' do
   Channel.all.destroy_all
-end        
+end  
+
+post '/channels/sidebar' do
+  members = params[:members].strip().split(",")    
+  user = params[:username]                       
+  name = params[:name]
+  
+end      
 
 post '/channels' do        
   input = params[:channel]                     
   
-  owner = Person.first(conditions: {username: input['owner'].sub("@","")})
+  owner = Person.criteria.id(params[:id]).limit(1)[0]
                                  
   allowed_users = input['allowed_users'].strip()
                                         .split(",")
                                         .map do |u|; u.sub("@", "").strip(); end
-                                        
-  puts allowed_users
-  
+
+  allowed_users.each do |member|
+    $faye.get_client.publish("/mentions/#{member}", {
+      'text'      => "#{owner.username} invited you to join /#{input[:name]}",
+      'username' => owner.username,
+      'invitation' => input[:name],
+      })                    
+  end                                        
+
   channel = Channel.create(name: input[:name],
                            person: owner,
                            allowed_users: allowed_users)  
@@ -110,7 +128,7 @@ get '/channel/destroy/:id' do
 end  
 
 get '/token/:username' do
-  person = Person.first(:conditions => { :username => params[:username]})     
-  @token = Digest::SHA1.hexdigest(person.key + "salt" + person.username)
+  @person = Person.first(:conditions => { :username => params[:username]})     
+  @token = Digest::SHA1.hexdigest(@person.key + "salt" + @person.username)
   haml :tokenstand
 end

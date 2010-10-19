@@ -9,6 +9,7 @@ ClientAuth = {
       message.ext = {};
       message.ext.authToken = ABApp.sharedStorageManager().get('token');
       message.ext.authUser = ABApp.sharedStorageManager().get('username');
+      message.ext.authUserID = ABApp.sharedStorageManager().get('userid');
     }                      
     callback(message);
   },      

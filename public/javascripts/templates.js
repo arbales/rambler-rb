@@ -15,8 +15,26 @@ EUWindowArchive = {
 			  Event.stop(event);
 			  var el = event.element();
 			  var name = el.down("input[name=channel[name]]").value;
-        ABApp.channels[name] = new SidebarManager([name]).createTracker().createStreamContainer().remember();
-				EUWindow.destroyWindow(el.up(".EUWindow"));
+				var members = el.down("input[name=channel[allowed_users]]").value
+        ABApp.channels[name] = new SidebarManager([name]).remember()
+																												 // Register a tracker element for the channel.
+																										     .createTracker()
+																										     // This creates an element from an HBS template that handles the streams.
+																										     .createStreamContainer()
+																												 .addBehavior('popstream');
+				EUWindow.destroyWindow(el.up(".EUWindow"));         
+				new Ajax.Request("/channels/sidebar", {
+					 	params: {name: name, 
+										 members: members,
+										 userid: ABApp.sharedStorageManager().get('userid'),
+										 token: ABApp.sharedStorageManager().get('token')},
+						onSuccess: function(){
+							new ABMessage("Invitations sent.");
+						},
+						onFailure: function(){
+							new ABMessage("Your channel could not be secured.", {type:'error'});
+						}
+				});
 			}
 		}
 	},
@@ -26,35 +44,10 @@ EUWindowArchive = {
 			onSubmit: function(event){
 				Event.stop(event); 
 				var el = event.findElement('form');
-//				var div = new Element('div', {'class':'messages'});
-//				$('secondary_streams').insert(div);
 				var channel = el.down("input[type=text]").value;
-				
 				ABApp.channels[channel] = new SubscriptionManager([channel]);
 				EUWindow.destroyWindow(el.up(".EUWindow"));
-				
-        ABApp.channels[channel]
-            // Remember this subscription.
-            .remember()
-            // Register a tracker element for the channel.
-            .createTracker()
-            // This creates an element from an HBS template that handles the streams.
-            .createStreamContainer()
-            // We want to add specific behavior for the beginning of this pull.
-            // This stuff should be abstracted into a module, since it applies to any streams with a reload button.
-            .addHook('pullBegin', function(){
-              this.element.down(".command a").update("Fetching messages&hellip;");})
-            .addHook('pullComplete', function(){
-              this.element.down(".command a").update("Load More");})
-            .addHook('pull500', function(){
-              this.element.down(".command").update("Unable to connect to archive.");
-            })
-            .addHook('pulledContent', function(){
-              this.getCounter().addClassName('new');})
-            // This pulls content from the stream that was published since the last time we checked. 
-            .pull();
-				
-				
+        ABApp.channels[channel].addBehavior('popstream');
 			}
 		}
 	}
@@ -65,7 +58,7 @@ EUTemplateArchive = {
     /*classNames: ['messages', 'popup_stream'],
     type: 'div',
     style: 'display:none',*/
-    template: "<div class='messages popup_stream' data-channel='{{channel}}' style='display:none'><p class='command'><a href='/{{channel}}'>Load More</a></p>"
+    template: "<div class='messages popup_stream' data-channel='{{channel}}' style='display:none'>{{contents}}<p class='command'><a class='pull' href='/{{channel}}'>Load More</a><a class='focus' href='/{{channel}}'>Focus</a></p>"
   } 
 }     
 

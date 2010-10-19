@@ -11,27 +11,28 @@ class ServerAuth
     subscription = message['subscription']
     msg_token    = message['ext'] && message['ext']['authToken']
     msg_user    = message['ext'] && message['ext']['authUser']
+    msg_userid    = message['ext'] && message['ext']['authUserID']
     
   begin                                       
     if (subscription.start_with?("/people/"))                                             
       person = Person.first(:conditions => { :username => subscription.sub("/people/", "")})     
       # Add an error if the tokens don't match
-      if (Digest::SHA1.hexdigest(person.key + "salt" + person.username) != msg_token)
+      unless (person.verify(msg_token))
         message['ext']['channel_reference'] = subscription
         message['error'] = "You couldn't join #{subscription} because of a permissions problem."
       end
     elsif (subscription.start_with?("/mentions/"))
       person = Person.first(:conditions => { :username => subscription.sub("/mentions/", "")})     
       # Add an error if the tokens don't match
-      if (Digest::SHA1.hexdigest(person.key + "salt" + person.username) != msg_token)
+      unless (person.verify(msg_token))
         message['ext']['channel_reference'] = subscription
         message['error'] = "You couldn't join #{subscription} because of a permissions problem."
       end
     elsif (sub = Channel.first(conditions:{name: subscription.sub("/", "")}))
-      person = Person.first(conditions: {username: msg_user})     
+      person = Person.criteria.id(msg_userid).limit(1)[0]     
       puts sub.allowed_users.inspect
       puts person.username
-      if sub.allowed_users.include?(person.username) && (Digest::SHA1.hexdigest(person.key + "salt" + person.username) == msg_token)
+      if sub.allowed_users.include?(person.username) && person.verify(msg_token)
         # successful
       else
         message['error'] = "#{person.username} couldn't join #{subscription}, are you allowed to?"

@@ -5,9 +5,10 @@ if (ABApp === undefined){
 	ABApp = {};
 }
 var ABApp = {
+	behaviors: {},
   stream: {},   
 	channels: {},
-  cache: $H(), 
+  cache: {}, 
 
   //  Returns the shared instance of the StorageManager for interacting with the HTML5 localStorage API.  
   sharedStorageManager: function(){

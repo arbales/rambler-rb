@@ -1,4 +1,6 @@
 %form.remote{action: "/channels", method: 'post'}
+  = hidden_field_tag "userid", class: "from_ls" 
+  = hidden_field_tag "token", class: "from_ls" 
   = text_field_tag 'channel[name]', placeholder: "Channel Name"
   = text_field_tag 'channel[owner]', placeholder: "Owner @you"
   = text_field_tag 'channel[allowed_users]', placeholder: "Allowed Users (@you, @friend, @frenemy)"
@@ -8,7 +10,7 @@
   - @channels.each do |channel|
     %p
       %span.user
-        = channel.person.username
+        = channel.person.username rescue "error"
       %span.channel_name
         = channel.name
       %span.short_list
