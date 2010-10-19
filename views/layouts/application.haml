@@ -6,7 +6,7 @@
       =javascript_include_tag 'deploy.js'
     - else
       =stylesheet_link_tag 'reset', 'grid', 'style'
-      = javascript_include_tag '/faye.js','def', 'sha1','prototype.s2.min','handlebars','templates','euwindow', 'abmessage', 'lowpro','app'
+      = javascript_include_tag '/faye.js','faye_ext','def', 'sha1','prototype.s2.min','handlebars','templates','euwindow', 'abmessage', 'lowpro','managers','abapp','app'
 
 %body
   =flash_tag(:success, :class => 'message success', :id => 'flash-success')
@@ -24,18 +24,11 @@
         %ul>
           %li.mentions.tracker>
             mentions
-            %span.count> 0  
-          %li.channel.tracker>
-            red
-            %span.count> 0      
+            %span.count> 0   
     .clear.vspace_2
     =yield
 
-    .grid_12.alpha#footer{"style"=>"display:none"}
+    .grid_12.alpha#footer{style: "display:none"}
       %p
-        Produced by
-        =link_to "Austin Bales", "http://austinbales.com"
-        at
-        =link_to("417east", "http://417east.com") + "."
-        =link_to "Bug Reports &amp; Feature Requests", "http://417east.com/support/contact", :id => "bug-link"
+        An Odopod joint.
       

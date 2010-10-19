@@ -17,16 +17,20 @@ class ServerAuth
       person = Person.first(:conditions => { :username => subscription.sub("/people/", "")})     
       # Add an error if the tokens don't match
       if (Digest::SHA1.hexdigest(person.key + "salt" + person.username) != msg_token)
+        message['ext']['channel_reference'] = subscription
         message['error'] = "You couldn't join #{subscription} because of a permissions problem."
       end
     elsif (subscription.start_with?("/mentions/"))
       person = Person.first(:conditions => { :username => subscription.sub("/mentions/", "")})     
       # Add an error if the tokens don't match
       if (Digest::SHA1.hexdigest(person.key + "salt" + person.username) != msg_token)
+        message['ext']['channel_reference'] = subscription
         message['error'] = "You couldn't join #{subscription} because of a permissions problem."
       end
     elsif (sub = Channel.first(conditions:{name: subscription.sub("/", "")}))
       person = Person.first(conditions: {username: msg_user})     
+      puts sub.allowed_users.inspect
+      puts person.username
       if sub.allowed_users.include?(person.username) && (Digest::SHA1.hexdigest(person.key + "salt" + person.username) == msg_token)
         # successful
       else
@@ -34,7 +38,8 @@ class ServerAuth
       end  
     end
   rescue => e
-    p e     
+    p e 
+    message['ext']['channel_reference'] = subscription
     message['error'] = "You couldn't join #{subscription} because of a permissions problem."
   ensure
     # Call the server back now we're done

@@ -1,6 +1,6 @@
 EUWindowArchive = {
 	'channel:create' : {
-		template: "<div class='widget mod'><form action='/channel/create' class='via_publisher'><h2>Create a Channel</h2><input type='text' name='channel[name]' placeholder='Channel Name (red, purple, yellow)' /><input type='text' name='channel[allowed_users]' placeholder='Allowed Users (@jon, @susan, @smith)' /><p class='action_bar'><input type='submit' value='Submit'/><input type='button' class='button-nevermind' value='Nevermind' /></p></form></div>",
+		template: "<div class='widget full'><form action='/channel/create' class='via_publisher'><h2>Create a Channel</h2><input type='text' name='channel[name]' placeholder='Channel Name (red, purple, yellow)' /><input type='text' name='channel[allowed_users]' placeholder='Allowed Users (@jon, @susan, @smith)' /><p class='action_bar'><input type='submit' value='Submit'/><input type='button' class='button-nevermind' value='Nevermind' /></p></form></div>",
 		options: {
 			onSubmit: function(event){
 				Event.stop(event);
@@ -8,17 +8,53 @@ EUWindowArchive = {
 			}
 		}
 	},
+	'channel:sidebar' : {
+		template: "<div class='widget full'><form action='/channel/sidebar' class='via_publisher'><h2>Time for a Sidebar?</h2><p>You can invite people to sidebars, but they're also public, it's just like walking off to the side of the room.</p><section><input type='text' name='channel[name]' placeholder='Topic' /><input type='text' name='channel[allowed_users]' placeholder='People to invite (jon, susan, smith)' /></section><p class='action_bar'><input type='button' class='button-nevermind' value='Nevermind' /><input type='submit' value='Start Sidebar'/></p></form></div>",
+		options: {
+			onSubmit: function(event){
+			  Event.stop(event);
+			  var el = event.element();
+			  var name = el.down("input[name=channel[name]]").value;
+        ABApp.channels[name] = new SidebarManager([name]).createTracker().createStreamContainer().remember();
+				EUWindow.destroyWindow(el.up(".EUWindow"));
+			}
+		}
+	},
 	'channel:join' : {
-		template: "<div class='widget mod'><form action='/channel/join' class='via_publisher'><h2>Join a Channel</h2><input type='text' name='channel[name]' placeholder='Channel Name (red, purple, yellow)' /><p class='action_bar'><input type='submit' value='Join'/><input type='button' class='button-nevermind' value='Nevermind' /></p></form></div>",
+		template: "<div class='widget full'><form action='/channel/join' class='via_publisher'><h2>Join a Channel</h2><p>Pins a channel to your ramblobar.</p><section><input type='text' name='channel[name]' placeholder='Channel Name (red, purple, yellow)' /></section><p class='action_bar'><input type='button' class='button-nevermind' value='Nevermind' /><input type='submit' value='Join Channel'/></p></form></div>",
 		options: {
 			onSubmit: function(event){
 				Event.stop(event); 
 				var el = event.findElement('form');
-				var div = new Element('div', {'class':'messages'});
-				$('secondary_streams').insert(div);
+//				var div = new Element('div', {'class':'messages'});
+//				$('secondary_streams').insert(div);
 				var channel = el.down("input[type=text]").value;
-				ABApp.channels[channel] = new SubscriptionManager([channel], div);
+				
+				ABApp.channels[channel] = new SubscriptionManager([channel]);
 				EUWindow.destroyWindow(el.up(".EUWindow"));
+				
+        ABApp.channels[channel]
+            // Remember this subscription.
+            .remember()
+            // Register a tracker element for the channel.
+            .createTracker()
+            // This creates an element from an HBS template that handles the streams.
+            .createStreamContainer()
+            // We want to add specific behavior for the beginning of this pull.
+            // This stuff should be abstracted into a module, since it applies to any streams with a reload button.
+            .addHook('pullBegin', function(){
+              this.element.down(".command a").update("Fetching messages&hellip;");})
+            .addHook('pullComplete', function(){
+              this.element.down(".command a").update("Load More");})
+            .addHook('pull500', function(){
+              this.element.down(".command").update("Unable to connect to archive.");
+            })
+            .addHook('pulledContent', function(){
+              this.getCounter().addClassName('new');})
+            // This pulls content from the stream that was published since the last time we checked. 
+            .pull();
+				
+				
 			}
 		}
 	}
@@ -56,7 +92,7 @@ EUTemplateWaker.wake = function(name, data){
 	document.body.insert(el);
 	setTimeout(function() {
 	  Event.addBehavior.reload();
-	}, 100);
+	}, 1);
 	return el;
 }                       
                

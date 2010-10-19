@@ -10,8 +10,11 @@
       %p 
         %span.user= post.username 
         %span.text= post.text
-.grid_5#secondary_streams
-  .messages
-    %p
-      %span.user audree
-      %span.text Remember to submit your timesheets to openair.
+.grid_2.push_3.right
+  %button{class: "local_popup small", value: "channel:join"}
+    Join Room
+  .clear.vspace
+  %button{class: "local_popup small", value: "channel:sidebar"}
+    Start a Sidebar
+  .sidebars
+    %ul

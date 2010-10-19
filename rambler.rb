@@ -27,12 +27,27 @@ get '/' do
   haml :index         
 end
 
-get '/mentions/:username' do
+get '/archive/mentions/:username' do
   if params[:since] == 'false'
     mentions =  Post.where(:channel => "/mentions/#{params[:username]}")
                     .descending(:created_at)
   else
     mentions =  Post.where(:channel => "/mentions/#{params[:username]}")
+                    .where(:created_at.gt => params[:since])
+                    .limit(30)
+                    .descending(:created_at)
+  end
+  content_type :json
+  mentions.to_json
+end
+
+get '/archive/:channel' do
+  # Add AUTH!
+  if params[:since] == 'false'
+    mentions =  Post.where(:channel => "/#{params[:channel]}")
+                    .descending(:created_at)
+  else
+    mentions =  Post.where(:channel => "/#{params[:channel]}")
                     .where(:created_at.gt => params[:since])
                     .limit(30)
                     .descending(:created_at)
@@ -76,8 +91,10 @@ post '/channels' do
                                  
   allowed_users = input['allowed_users'].strip()
                                         .split(",")
-                                        .map do |u|; u.sub("@", ""); end
+                                        .map do |u|; u.sub("@", "").strip(); end
                                         
+  puts allowed_users
+  
   channel = Channel.create(name: input[:name],
                            person: owner,
                            allowed_users: allowed_users)  
@@ -89,8 +106,7 @@ end
 get '/channel/destroy/:id' do
   @model = "channel"
   @id = params[:id]
-  haml :destroy_confirm, layout: !
-  request.xhr?
+  haml :destroy_confirm, layout: !request.xhr?
 end  
 
 get '/token/:username' do
