@@ -62,8 +62,8 @@ def ("SubscriptionManager")({
     var memory = ABApp.sharedStorageManager().get('channels:remembered');
     if (memory){
       var mem_a = memory.split(",");
-      if (!mem_a.include(this.channel[0])){
-        mem_a.push(this.channel[0]);
+      if (!mem_a.include(this.channels[0])){
+        mem_a.push(this.channels[0]);
       }
       ABApp.sharedStorageManager().set('channels:remembered', mem_a.join(","));
     }else{
