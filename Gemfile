@@ -1,4 +1,5 @@
 source "http://rubygems.org"
+gem 'thin'
 gem 'eventmachine'
 gem 'bson_ext', "1.1.1"
 gem 'sinatra'     

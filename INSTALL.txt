@@ -1,0 +1,28 @@
+# Don't just copy/paste this file, you need to follow the on-screen prompts that the installers create.
+# This process will take ~6 minutes.
+
+# Homebrew makes Darwin package management easy.
+curl -LsSf http://github.com/mxcl/homebrew/tarball/master | sudo tar xvz -C/usr/local --strip 1
+
+# Have git?
+brew install git
+
+# You need MongoDB.
+brew install mongodb
+
+# Run mongodb
+sudo mongod run --config /usr/local/Cellar/mongodb/1.6.3-x86_64/mongod.conf
+
+# RVM is the way to manage your rubies.
+bash < <( curl http://rvm.beginrescueend.com/releases/rvm-install-head )
+
+# You need Ruby 1.9.2. I'm liking the new Hash syntax too much to go back.
+rvm install 1.9.2
+
+# You need bundler, it makes your life easier in the long run.
+rvm 1.9.2 && gem update && gem install bundler
+
+# Install the the Gems you need.
+cd /path/to/repo && bundle install
+
+thin start -p 8080
