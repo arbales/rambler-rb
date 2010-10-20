@@ -4,17 +4,20 @@
 .clear.vspace_3
 .main_divider
 .clear.vspace
-.scroller.grid_7
+.scroller.grid_10
   .messages#main_stream
-    - @posts.each do |post|
-      %p 
-        %span.user= post.username 
-        %span.text= post.text
-.grid_2.push_3.right
-  %button{class: "local_popup small", value: "channel:join"}
-    Join Room
-  .clear.vspace
-  %button{class: "local_popup small", value: "channel:sidebar"}
-    Start a Sidebar
+    %p.command
+      %a.pull{href:'/chat'}Load More
+
+.grid_2.right
+  %p.generous
+    %button{class: "local_popup small", value: "channel:join"}
+      Join Room
+
+    %button{class: "local_popup small", value: "channel:sidebar"}
+      Start a Sidebar
+
+    %button{class: "local_popup small", value: "channel:create"}
+      Start a Channel
   .sidebars
     %ul

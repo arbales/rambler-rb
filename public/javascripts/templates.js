@@ -1,10 +1,23 @@
 EUWindowArchive = {
 	'channel:create' : {
-		template: "<div class='widget full'><form action='/channel/create' class='via_publisher'><h2>Create a Channel</h2><input type='text' name='channel[name]' placeholder='Channel Name (red, purple, yellow)' /><input type='text' name='channel[allowed_users]' placeholder='Allowed Users (@jon, @susan, @smith)' /><p class='action_bar'><input type='submit' value='Submit'/><input type='button' class='button-nevermind' value='Nevermind' /></p></form></div>",
+		template: "<div class='widget full'><form action='/channels' method='post' class='via_publisher'><h2>Create a Channel</h2><input type='text' name='channel[name]' placeholder='Channel Name (red, purple, yellow)' /><input type='text' name='channel[allowed_users]' placeholder='Allowed Users (@jon, @susan, @smith)' /><p class='action_bar'><input type='submit' value='Submit'/><input type='button' class='button-nevermind' value='Nevermind' /></p></form></div>",
 		options: {
 			onSubmit: function(event){
-				Event.stop(event);
-				this.element.setStyle("opacity: .5");
+			  Event.stop(event);
+        var el = event.findElement('form');
+        var channel = el.down('input[name=channel[name]]').value
+        el.up('.EUWindow').fade();
+        el.request({
+          parameters: {userid: ABApp.sharedStorageManager().get('userid'), token: ABApp.sharedStorageManager().get('token'), owner: ABApp.sharedStorageManager().get('username')},
+          onSuccess: function(){
+            ABApp.channels[channel] = new SubscriptionManager([channel]).createTracker().createStreamContainer().remember().addBehavior('popstream');
+            EUWindow.destroyWindow(el.up('.EUWindow'));
+          },
+          onFailure: function(transport){
+            el.up('.EUWindow').appear();
+            new ABMessage(transport.responseText, {type:'error'});
+          }
+        })
 			}
 		}
 	},
@@ -39,7 +52,7 @@ EUWindowArchive = {
 		}
 	},
 	'channel:join' : {
-		template: "<div class='widget full'><form action='/channel/join' class='via_publisher'><h2>Join a Channel</h2><p>Pins a channel to your ramblobar.</p><section><input type='text' name='channel[name]' placeholder='Channel Name (red, purple, yellow)' /></section><p class='action_bar'><input type='button' class='button-nevermind' value='Nevermind' /><input type='submit' value='Join Channel'/></p></form></div>",
+		template: "<div class='widget full'><form action='/channel/join' class='via_publisher'><h2>Join a Channel</h2><p>Pins a channel to your ramblobar.</p><section><input type='text' name='channel[name]' placeholder='Channel Name (red, purple, yellow)' value='{{channel}}'/></section><p class='action_bar'><input type='button' class='button-nevermind' value='Nevermind' /><input type='submit' value='Join Channel'/></p></form></div>",
 		options: {
 			onSubmit: function(event){
 				Event.stop(event); 
@@ -47,7 +60,10 @@ EUWindowArchive = {
 				var channel = el.down("input[type=text]").value;
 				ABApp.channels[channel] = new SubscriptionManager([channel]);
 				EUWindow.destroyWindow(el.up(".EUWindow"));
-        ABApp.channels[channel].addBehavior('popstream');
+        ABApp.channels[channel].createTracker()
+                               .createStreamContainer()
+                               .remember()
+                               .addBehavior('popstream');
 			}
 		}
 	}
@@ -58,7 +74,7 @@ EUTemplateArchive = {
     /*classNames: ['messages', 'popup_stream'],
     type: 'div',
     style: 'display:none',*/
-    template: "<div class='messages popup_stream' data-channel='{{channel}}' style='display:none'>{{contents}}<p class='command'><a class='pull' href='/{{channel}}'>Load More</a><a class='focus' href='/{{channel}}'>Focus</a></p>"
+    template: "<div class='messages popup_stream' data-channel='{{channel}}' style='display:none'>{{contents}}<p class='command'><a class='pull' href='/{{channel}}'>Load More</a> <a class='focus minor' href='/{{channel}}'>Focus</a> <a class='leave minor' href='/{{channel}}'>Leave</a></p>"
   } 
 }     
 

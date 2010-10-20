@@ -7,6 +7,11 @@ html {
 	overflow-y:scroll;
 }
 
+p.generous button{
+  margin-bottom:1ex;
+  min-width:110px;
+}
+
 .right {
   text-align:right;
 }
@@ -75,6 +80,13 @@ h2 {
 .messages p.command a {
   color:#960042;
   text-decoration:none;
+}
+.messages p.command a.minor {
+  font-size:10px;
+  font-weight:bold;
+  float:right;
+  text-transform:uppercase;
+  margin:0px 10px;
 }  
 
 .messages p.command a.inactive {
@@ -94,7 +106,7 @@ h2 {
 }
      
 .messages p:nth-child(even), .listing p:nth-child(even){
-  background-color:rgba(0,0,0,.03);
+  background-color:rgba(0,0,0,.04);
 }
 
 .publisher input[type=text]{
@@ -218,6 +230,17 @@ span.short_list {
   line-height:1.3em;
 /*  float:left; */
 }   
+
+.popup_stream::-webkit-scrollbar, #bookings::-webkit-scrollbar {
+    width: 1.15ex;
+    }
+ 
+.popup_stream::-webkit-scrollbar-thumb:vertical{
+    background: rgba(0, 0, 0, .2);
+    background: -webkit-gradient(linear, 0% 100%, 0% 0%, from(rgba(0, 0, 0, .2)), to(rgba(0, 0, 0, .08)));
+	border-radius:8px;
+    } 
+
         
 
 .popup_stream {
@@ -232,6 +255,8 @@ span.short_list {
   background:#F0EAD8 url('/images/dialogbg.png');
 	background-clip:padding-box;
   -webkit-box-shadow:rgba(0,0,0,.18) 0px 0px 8px 2px;
+  max-height:600px;
+  overflow-y:auto;
 }
 
 #main_stream {

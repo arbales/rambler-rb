@@ -48,6 +48,7 @@ def ("SubscriptionManager")({
     }
     var self = this; // Shouldn't I just bind functions to the contexts I'm working with :)
     self.hooks = {};
+    self.last_xhr_timestamp = false;
     self.element = element || null;
     if (self.element){
       self.element.writeAttribute('data-channel', channels[0]);
@@ -58,6 +59,14 @@ def ("SubscriptionManager")({
     });
     return this;
   },  
+  forget: function(){
+    var memory = ABApp.sharedStorageManager().get('channels:remembered');
+    if (memory){
+      var mem_a = memory.split(",").without(this.channels[0]);
+      ABApp.sharedStorageManager().set('channels:remembered', mem_a.join(","));
+    }
+    return this;
+  },
   remember: function(){
     var memory = ABApp.sharedStorageManager().get('channels:remembered');
     if (memory){
@@ -225,30 +234,42 @@ def ("SubscriptionManager")({
     var _onBegin = this.hooks['pullBegin'] || function(transport){};
     var _onContentInserted = this.hooks['pulledContent'] || function(transport){};
     
-    if (options && options.since){
-      var date = options.since
-    } else {
-      var date = ABApp.sharedStorageManager().get('channel:'+this.channels[0].sub("/","_",5)+':pull');
-    }
+    var date = ABApp.sharedStorageManager().get('channel:'+this.channels[0].sub("/","_",5)+':pull');
     
     var self = this;
 
     this.getHook('pullBegin').bind(this)();
-
-/*    var counter = $$('.'+channel_name+' .counter').first(); */
-   
-/*    this.update("Please wait&hellip;");
-    el.update("you're seeing everything").addClassName('inactive'); */    
     
     new Ajax.Request("/archive/"+self.channels[0], {
       method: 'get',
-      parameters: {since: date},
+      // If date != false, the server will return only the posts created
+      // since the date — if there are none, the server will fall back 
+      // to pagination and return the first 20 posts. 
+      parameters: {since: date, before: self.last_xhr_timestamp},
       onSuccess: function(transport){
-        var data = transport.responseText.evalJSON();
-        data.reverse().each(function(message){
-//          self.incrementCounter();
-          self.receive(message);
-        });
+        var data = transport.responseText.evalJSON().reverse();
+        if (data.size() == 0){
+          self.element.down('.command .pull').update('End of Stream').removeClassName("pull").addClassName("inactive");
+        }
+        
+        // If this manager hasn't performed an XHR pull before, then
+        // it will just receive the posts like normal, and note the timestamp
+        // of the earliest post it got.
+        if (self.last_xhr_timestamp == false){
+          self.last_xhr_timestamp = data[0].created_at;
+          data.each(function(message){
+            self.receive(message);
+          });
+        // If the manager _has_ done an XHR pull then it will receive the posts
+        // alerting the user, and insert them at the bottom of the streamContainer.
+        // This should be methodized.
+        }else{
+          data.each(function(message){
+            self.last_xhr_timestamp = message.created_at;
+            var el = new Element("p");
+            self.element.down('p.command').insert({before:el.update(message.text)});
+          });
+        }
         
         var ndate = new Date();
         ABApp.sharedStorageManager().set('channel:'+self.channels[0].sub("/","_",5)+':pull', ndate.toString());
@@ -265,29 +286,45 @@ def ("SubscriptionManager")({
   }, 
   // Stop receiving messages on this channel.
   cancel: function(){
-    this.getCounter().fade().remove();
+    this.forget();
+    this.unregisterElements();
+    new ABMessage('You&rsquo;ve left ' + this.channels[0] + '.');
     this.subscription.cancel();
   },
   getUsername: function(){return ABApp.sharedStorageManager().get('username');},
   // Receive a message on this subscription and insert it into an element as a `p` tag. If no element was provided
   // log the message.
   // *TODO* persist undisplayed messages in localStorage for later display.
-  receive: function(message){    
+  receive: function(message){ 
+    var date = ABApp.sharedStorageManager().get('channel:'+this.channels[0].sub("/","_",5)+':pull');
+       
     if (this.element){
-      var el = new Element("p");
-      if (message.persists == 'false'){el.addClassName("persists-false");}else{this.incrementCounter()}
-      if (message.username != this.getUsername()){
-        this.highlightCounter();
-      }
       
-      this.element.insert(
-        {top: el.update("<span class='user'>" + message.username + "</span><span class='text'>" + message.text+"</span>")
-                  .hide()
-                  .appear()
-        });      
+      var el = new Element("p");
+      if (message.created_at == undefined){
+        if (message.persists == 'false'){el.addClassName("persists-false");}else{this.incrementCounter()}
+        if (message.invitation != undefined){
+          el.addClassName('invitation');
+          el.writeAttribute('data-channel', message.invitation);
+        }
+        if (message.username != this.getUsername()){
+          this.highlightCounter();
+        }
+      }else{
+        var created = ISODate.convert(message.created_at);
+        var old_date = new Date(date);
+        if(created>old_date){
+          if (message.username != this.getUsername()){
+            this.highlightCounter();
+          }
+          this.incrementCounter();
+        }
+      }
+      el.update("<span class='user'>" + message.username + "</span><span class='text'>" + message.text+"</span>").hide();
+      this.element.insert({top: el.appear()});      
         
       Event.addBehavior.reload.defer(); 
-    }else{
+    } else{
       /*console.log("Unrouted Message:" + message.text);*/
     }
   },  
@@ -345,6 +382,14 @@ def ("SidebarManager") << SubscriptionManager ({
 		}
     
     this.element.toggle();
+  },
+  forget: function(){
+    var memory = ABApp.sharedStorageManager().get('sidebars:remembered');
+    if (memory){
+      var mem_a = memory.split(",").without(this.channels[0]);
+      ABApp.sharedStorageManager().set('sidebars:remembered', mem_a.join(","));
+    }
+    return this;
   },
   remember: function(){
     var memory = ABApp.sharedStorageManager().get('sidebars:remembered');

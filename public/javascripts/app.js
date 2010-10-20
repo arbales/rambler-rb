@@ -10,7 +10,7 @@ document.observe('dom:loaded', function(){
 		.addHook('pullBegin', function(){
       this.element.down(".command a").update("Fetching messages&hellip;");})
     .addHook('pullComplete', function(){
-      this.element.down(".command a").update("Load More");})
+      this.element.down(".command a.pull").update("Load More");})
     .addHook('pull500', function(){
       this.element.down(".command").update("Unable to connect to archive.");
     })
@@ -26,7 +26,7 @@ document.observe('dom:loaded', function(){
 	window.onscroll = ABMessageResizer;
                                           
   // Setup the Faye client.
-  ABApp.stream.client = new Faye.Client('http://bubbles.local/faye');
+  ABApp.stream.client = new Faye.Client('http://desk.austinbales.com/faye');
   
   // Add extensions
   ABApp.stream.client.addExtension(ClientAuth); 
@@ -142,23 +142,30 @@ document.observe('dom:loaded', function(){
 			//ABApp.channels[channel_name].unregisterTracker().swapStreamContainers(ABApp.channels[old_channel_name].createTracker());
 			Event.addBehavior.reload();
 		},
+		'.command a.leave:click':function(event){
+      Event.stop(event);
+      var channel_name = this.up('.messages').readAttribute("data-channel");
+      ABApp.channels[channel_name].cancel();
+		},
     "form.remote:submit":function(event){
-			Event.stop(event);
-      var self = this;
-			$$("#" + self.identify() + ' input.from_ls').each(function(s){ 
-				s.value = ABApp.sharedStorageManager().get(s.readAttribute('name'));
-			});
-			self.request({
-				onSuccess: function(transport){          
-				  if (self.hasClassName('closes')){
-  					self.up('.form').fade({duration: .35});				    
-				  }
-          new ABMessage(transport.responseText, {type: 'success'});
-				},
-				onFailure: function(transport){
-          new ABMessage(transport.responseText, {type: 'error'});
-				}
-			});
+      if (!this.up('.EUWindow')){
+  			Event.stop(event);
+        var self = this;
+  			$$("#" + self.identify() + ' input.from_ls').each(function(s){ 
+  				s.value = ABApp.sharedStorageManager().get(s.readAttribute('name'));
+  			});
+  			self.request({
+  				onSuccess: function(transport){          
+  				  if (self.hasClassName('closes')){
+    					self.up('.form').fade({duration: .35});				    
+  				  }
+            new ABMessage(transport.responseText, {type: 'success'});
+  				},
+  				onFailure: function(transport){
+            new ABMessage(transport.responseText, {type: 'error'});
+  				}
+  			});
+		  }
 		},  
 		
     // General handler for popup links. Utilizes an _EUWindow_
@@ -178,7 +185,7 @@ document.observe('dom:loaded', function(){
                                  
   // Automatically logs a user in if their token is saves.
   if (ABApp.sharedStorageManager().get('username') != ""){
-    ABApp.channels['chat'] = new SubscriptionManager(["chat"], $('main_stream'));  
+    ABApp.channels['chat'] = new SubscriptionManager(["chat"]).setStreamContainer($('main_stream')).addBehavior('popstream');  
     if ($$('.login').size() > 0){
       $$('.login').first().fade();
       $$('form.publisher').first().appear();
