@@ -72,3 +72,4 @@ DEPENDENCIES
   padrino-core
   padrino-helpers
   sinatra
+  thin

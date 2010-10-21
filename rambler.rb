@@ -21,10 +21,22 @@ not_found do
 end
 
 get '/' do   
-#  @posts = Post.where(:channel => "/chat")
-#               .limit(20)
-#               .descending(:created_at)
   haml :index         
+end
+
+get '/create-account' do
+  haml :register
+end
+
+post '/register' do
+  username = params[:email].sub("@odopod.com","")
+  person = Person.new(:username => username,
+                         :key => Digest::SHA1.hexdigest(username))
+  if person.save
+    redirect "/token/#{username}"                         
+  else
+    abmessage :error, "Your user account could not be created."
+  end
 end
 
 get '/archive/mentions/:username' do
@@ -68,11 +80,6 @@ get '/archive/:channel' do
   content_type :json
   mentions.to_json
 end
-
-get '/person/add/:name/:key' do
-  person = Person.create(:username => params[:name],
-                         :key => Digest::SHA1.hexdigest(params[:key]))
-end  
 
 post '/publish' do
   $faye.get_client.publish("/" + params[:channel], {
