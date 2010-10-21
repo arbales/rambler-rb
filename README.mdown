@@ -1,3 +1,5 @@
+## Don't use Rambler.
+
 # Rambler
 Rambler is a prototype of a private social networking and communication tool. It runs over Faye (implements Bayeux) so it's "real-time". I've developed it over the past week or so during some downtime at Ododpod.
 
