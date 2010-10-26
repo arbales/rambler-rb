@@ -26,7 +26,7 @@ document.observe('dom:loaded', function(){
 	window.onscroll = ABMessageResizer;
                                           
   // Setup the Faye client.
-  ABApp.stream.client = new Faye.Client('http://desk.austinbales.com/faye');
+  ABApp.stream.client = new Faye.Client('http://bubbles.local/faye');
   
   // Add extensions
   ABApp.stream.client.addExtension(ClientAuth); 
