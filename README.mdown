@@ -15,7 +15,7 @@ Odopod has been trying out Yammer. Have you used it? It's bastard child of Faceb
 huge groups of people, not a studio of 52.
 
 ## Who owns this? What's the license?
-I'd like to GPL Rambler. I'm building it during the working hours at Odopod, but I don't anticipate a conflict over releasing it. If Odopod likes it, then why not share it? If they hate it, then who cares? This project falls under the category of "R&D"
+I'd like to release it with an MIT license. I'm building it during the working hours at Odopod, but I don't anticipate a conflict over releasing it. If Odopod likes it, then why not share it? If they hate it, then who cares? This project falls under the category of "R&D"
 
 ## Why Ruby 1.9.2
 Because.
