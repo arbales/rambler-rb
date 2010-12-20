@@ -2,33 +2,57 @@ use Rack::Session::Cookie
 
 before do
   @_flash, session[:_flash] = session[:_flash], nil if session[:_flash]
-  #@current_user = nil                            
-  #@current_organization = nil
-  
-  #if (session['user_id'] != nil) then
-  #  @current_user = Person.get(session['user_id'])
-  #  @current_organization = @current_user.organization  
-  #  p @current_organization
-  #else
-  #  session['ip'] = @env['REMOTE_ADDR']
-  #  session['user_id'] = nil
-  #end  
-  #if (@current_user.nil? && !['/','/login','/register', '/css','/js', '/images', 'favicon.ico'].include?(request.path_info))
-  #  error 403
-  #end      
+end  
+
+get '/auth/:name/callback' do
+    auth = request.env['omniauth.auth']
+    # do whatever you want with the information!
+    person = Person.where("#{params[:name]}_uid".to_sym => auth['uid'])[0]     
+    
+    if person != nil   
+      person.key = BCrypt::Engine.generate_salt                      
+      session[:u_full_name] = auth['user_info']['name']
+      session[:u_image] = (params[:name] == "facebook") ? ("https://graph.facebook.com/"+ auth['user_info']['nickname'] + "/picture") : (auth['user_info']['image'])
+      person[:fb_image] = session[:u_image]
+      session[:token] = Digest::SHA1.hexdigest(person.key + "salt" + person.username)
+      session[:username] = person.username
+      session[:userid] = person.id             
+      person.save
+      
+      redirect "/"
+    else
+      #person = Person.first(:conditions => { :username => session[:username]})     
+      #person[:facebook_uid] = auth['uid']
+      #person.save
+      abmessage :error, "Facebook user is not associated with an account."
+    end  
+                         
 end 
 
-##error 403 do
-#  haml "errors/403".to_sym
-#end  
+get '/create-account' do
+  haml :register
+end
 
-#facebook do
-#   api_key  '77e7edb1f78e0d9d1ec454498d354a4e'
-#   secret   '3bd1ec690772a06761401762720cb9e1'
-#   app_id   172085949497689
-#   url      'http://fiesta.austinbales.com:3000/'
-#   callback 'http://fiesta.austinbales.com:3000/'
-# end      
+post '/register' do
+  username = params[:email].sub("@odopod.com","")
+  person = Person.new(:username => username,
+                         :key => BCrypt::Engine.generate_salt)
+  if person.save
+    redirect "/token/#{username}"                         
+  else
+    abmessage :error, "Your user account could not be created."
+  end
+end
+  
+get '/logout' do
+  session[:u_full_name] = nil
+  session[:u_image] = nil
+  session[:token] = nil
+  session[:username] = nil
+  session[:userid] = nil
+  redirect "/"
+end
+  
 
 
              
@@ -69,12 +93,6 @@ end
 
 def protected!
   requires_session_with_redirect!
-   
-#   if (@user.needs_to_reset_password)
-#     redirect '/me?return_to=' + request.path
-#   elsif (!@user.accepted_aggreement?)
-#     redirect '/agreements?return_to=' + request.path
-#   end
 end
 
 def protected_for_users_with_redirect!(collection)
