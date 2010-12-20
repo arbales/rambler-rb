@@ -1,0 +1,9 @@
+.messages.popup_stream{:"data-channel" => '{{channel}}', :style =>'display:none'}
+  {{contents}}
+  %p.command
+    %a.pull{href:'/{{channel}}'}
+      Load More
+    %a.focus.minor{href:'/{{channel}}'}
+      Focus
+    %a.leave.minor{href:'/{{channel}}'}
+      Leave

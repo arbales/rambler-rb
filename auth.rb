@@ -2,30 +2,37 @@ use Rack::Session::Cookie
 
 before do
   @_flash, session[:_flash] = session[:_flash], nil if session[:_flash]
+  #@current_user = nil                            
+  #@current_organization = nil
   
-  @current_user = nil                            
-  @current_organization = nil
-  
-  if (session['user_id'] != nil) then
-    @current_user = Person.get(session['user_id'])
-    @current_organization = @current_user.organization  
-    p @current_organization
-  else
-    session['ip'] = @env['REMOTE_ADDR']
-    session['user_id'] = nil
-  end
-  
-  
+  #if (session['user_id'] != nil) then
+  #  @current_user = Person.get(session['user_id'])
+  #  @current_organization = @current_user.organization  
+  #  p @current_organization
+  #else
+  #  session['ip'] = @env['REMOTE_ADDR']
+  #  session['user_id'] = nil
+  #end  
   #if (@current_user.nil? && !['/','/login','/register', '/css','/js', '/images', 'favicon.ico'].include?(request.path_info))
   #  error 403
-  #end 
-     
+  #end      
 end 
 
-error 403 do
-  haml "errors/403".to_sym
-end 
-                                                           
+##error 403 do
+#  haml "errors/403".to_sym
+#end  
+
+#facebook do
+#   api_key  '77e7edb1f78e0d9d1ec454498d354a4e'
+#   secret   '3bd1ec690772a06761401762720cb9e1'
+#   app_id   172085949497689
+#   url      'http://fiesta.austinbales.com:3000/'
+#   callback 'http://fiesta.austinbales.com:3000/'
+# end      
+
+
+             
+                                                  
 
 
 def rack_protected!

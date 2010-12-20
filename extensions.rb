@@ -13,7 +13,14 @@ class ServerAuth
     msg_user    = message['ext'] && message['ext']['authUser']
     msg_userid    = message['ext'] && message['ext']['authUserID']
     
-  begin                                       
+  begin
+    
+    unless (msg_token && msg_user && msg_userid && Person.criteria.id(msg_userid).limit(1)[0].verify(msg_token)) 
+      message['ext']['status'] = 'logout'
+      message['error'] = "You are not logged in."
+#      raise NotLoggedIn
+    end
+    
     if (subscription.start_with?("/people/"))                                             
       person = Person.first(:conditions => { :username => subscription.sub("/people/", "")})     
       # Add an error if the tokens don't match
@@ -30,16 +37,16 @@ class ServerAuth
       end
     elsif (sub = Channel.first(conditions:{name: subscription.sub("/", "")}))
       person = Person.criteria.id(msg_userid).limit(1)[0]     
-      puts sub.allowed_users.inspect
-      puts person.username
       if sub.allowed_users.include?(person.username) && person.verify(msg_token)
         # successful
       else
         message['error'] = "#{person.username} couldn't join #{subscription}, are you allowed to?"
       end  
-    end
+    end 
+  rescue NotLoggedIn
+    message['ext']['channel_reference'] = subscription
+    message['error'] = "You are not logged in."
   rescue => e
-    p e 
     message['ext']['channel_reference'] = subscription
     message['error'] = "You couldn't join #{subscription} because of a permissions problem."
   ensure

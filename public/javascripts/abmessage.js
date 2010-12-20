@@ -20,7 +20,7 @@ var ABMessage = Class.create({
 		}
 		
 		ABMessageResizer();
-	  $('message').className = this.options.type + " message";
+	  $('message').className = this.options.type + " message grid_12";
 		this.options.onCreate();
 	$('message').down('p').update(message);
 		$('message').appear({duration: .25}); 
@@ -60,17 +60,19 @@ var ABMessage = Class.create({
 
 var ABMessageResizer = function(event){
 	var vp = document.viewport.getWidth() - document.width;
-	var right =(document.width - $$(".nav ul").first().viewportOffset().left + vp);
+	var right =(document.width - $$(".nav").first().viewportOffset().left + vp);
 	
-	if (document.viewport.getScrollOffsets().top > ($$(".nav ul").first().viewportOffset().top + $$(".nav ul").first().measure('height') + 3)){
+	if (document.viewport.getScrollOffsets().top > ($$(".nav").first().viewportOffset().top + $$(".nav").first().measure('height')+65)){
 		var top = "0";       
-		var position = "fixed";
-	} else {
-		var top = $$(".nav ul").first().viewportOffset().top + document.viewport.getScrollOffsets().top;
-		var position = "absolute";
+		var position = "fixed"; 
+		$$('.publisher').first().setStyle("margin-top:"+$$(".nav").first().measure('height')+"px");
+	} else { 
+		var top = "";  
+		$$('.publisher').first().setStyle("margin-top:1ex");
+		var position = "static";
 	}
 	
 	width = document.width - right;                               
-	
-	$('message').setStyle("right:"+right+"px;width:"+width+"px;top:"+top+"px;"+"position:"+position+";");
+	$$('.nav').first().setStyle("top:"+top+"px;"+"position:"+position+";width:940px;z-index:100");
+	//$('message').setStyle("right:"+right+"px;width:"+width+"px;top:"+top+"px;"+"position:"+position+";");
 }

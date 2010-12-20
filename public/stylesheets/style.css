@@ -3,8 +3,13 @@ html {
 	font-size:16px;
 	color:#999;
 /*	background:url('/images/pink_dot_bg.gif') repeat-x ; */
-	background:url('/images/header-test.png') top center repeat-x ; 
-	overflow-y:scroll;
+  background-color:#f4f4f4; 
+  overflow-y:scroll;
+}    
+
+a {
+  color:#B00;
+  text-decoration:none;
 }
 
 p.generous button{
@@ -13,13 +18,39 @@ p.generous button{
 }
 
 .right {
-  text-align:right;
+float:right;
+text-align:right;
 }
 
 .header {
   color:#fff;
-  padding:4ex 0ex 0ex;
-  margin-bottom:3ex;    
+}                
+
+.account {
+  margin-top:5ex;
+  color:#4E4E4E;
+  font-weight:bold;
+  font-size:13px;
+}              
+   
+.account .profile {
+  vertical-align:middle;
+  vertical-align:middle;
+  margin-top:14px;
+  line-height:1.5em;
+}                
+
+.account .profile a {
+  font-size:11px;
+}
+
+.account .image {
+  margin-left:2ex; 
+  vertical-align:middle;
+}
+
+.account .image img {
+  border:4px solid #4e4e4e;
 }
 
 .header h1 {
@@ -34,13 +65,11 @@ p.generous button{
 }  
              
 .header .nav {
-  float:right;
-  margin-top:25px;
   display:block;
-  max-width:730px;
+  width:100%;
 }
 .header .nav ul {
-	background-color:rgba(0,0,0,.25);
+	background-color:rgba(0,0,0,.6);
 	padding:0px 22px;
 }
 
@@ -62,7 +91,13 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 h1 {
-  font-size:32px;
+  font-size:54px;
+  letter-spacing:-3px;
+}
+
+h1 a {
+  text-decoration:none;
+  color:#B80D00;
 }
 
 h2 {
@@ -70,7 +105,7 @@ h2 {
 }
 
 .messages p, .listing p {
-  padding:1ex 8px;
+  padding:2ex 8px;
 }   
 
 .messages p.command {
@@ -109,16 +144,23 @@ h2 {
   background-color:rgba(0,0,0,.04);
 }
 
+.publisher {
+  margin-top:1ex;
+  margin-bottom:1ex;
+}
 .publisher input[type=text]{
   font-size:20px;
 	width:100%;
 	background-color:rgba(255,255,255,.98);
 }
-input, button {
+input, button, .button {
+  cursor:pointer;
   font-size:16px;
   padding:1ex;
   border:1px solid rgba(0,0,0,.25);
-  border-radius:.25ex;
+  border:1px solid #ddd;
+	
+  font-family:'Helvetica Neue', Helvetica, Arial;
 }
 
 button, input[type=button], input[type=submit] {
@@ -158,7 +200,7 @@ p.action_bar {
   margin-top:20px;
 }
 
-.nav li.tracker {    
+.nav li.tracker, .nav li.command {    
 	margin:0px;
   cursor:pointer;     
   padding:8px 18px;
@@ -167,13 +209,37 @@ p.action_bar {
 	border-top:4px solid transparent;
 	border-bottom:4px solid transparent;
 	border-right:1px solid rgba(255,255,255,.25);  
-}                                            
+}  
+
+.nav li.command {
+	border-left:none; 
+}                                         
                            
-.nav li.tracker:first-child {
+.nav li.tracker:first-child, .nav li.command:first-child {
 	border-left:none;
 }
-.nav li.tracker:last-child {
+.nav li.tracker:last-child, .nav li.command:first-child {
 	border-right:none;
+}    
+
+.nav li.command a { 
+  text-decoration:none;
+  color:#fff; 
+  text-shadow:none;                  
+  font-size:11px;
+  text-transform:uppercase;
+  background-color:rgba(0,0,0,.6); 
+  display:inline-block;
+  padding:4px 8px;   
+   padding-bottom:5px;
+   -webkit-border-radius:18px;
+  -webkit-transition-property: background-color,color;  
+  -webkit-transition-duration: .35s;
+}                             
+
+li.command a:hover { 
+  color:#000;
+  background-color:#FDBB09;
 }
 
 .nav li.tracker.active {
@@ -201,6 +267,7 @@ li.tracker .count {
   display:inline-block;
 }
 
+
 li.tracker .count.new {                   
   color:#fff;
 	-webkit-animation-name: turn;
@@ -224,6 +291,27 @@ span.short_list {
 	font-style:italic;
 	opacity:.8;
 }
+          
+.messages p span.controls {
+  margin-left:18px;
+}                 
+.messages p span.controls input {
+  display:none;
+  width:auto;
+  height:auto;
+  padding:0px;
+  margin:0px;
+  border:none;
+}  
+.messages p:hover span.controls input{
+  display:inline-block;
+}
+.messages p.controls img{
+  -webkit-box-shadow:none;
+  border:none;
+  padding:0px;
+  margin:0px;
+}  
 
 .messages {
   font-size:22px;
@@ -231,35 +319,33 @@ span.short_list {
 /*  float:left; */
 }   
 
-.popup_stream::-webkit-scrollbar, #bookings::-webkit-scrollbar {
-    width: 1.15ex;
+.popup_stream::-webkit-scrollbar, #bookings::-webkit-scrollbar, ::-webkit-scrollbar {
+    width: 1.5ex;   
+    background:#ddd;
     }
  
-.popup_stream::-webkit-scrollbar-thumb:vertical{
+.popup_stream::-webkit-scrollbar-thumb:vertical, ::-webkit-scrollbar-thumb:vertical{
     background: rgba(0, 0, 0, .2);
     background: -webkit-gradient(linear, 0% 100%, 0% 0%, from(rgba(0, 0, 0, .2)), to(rgba(0, 0, 0, .08)));
 	border-radius:8px;
-    } 
+    }                      
 
         
 
 .popup_stream {
   display:block;
-  position:absolute;
-  width:600px;
   border:#960042 4px solid;        
 	-webkit-background-clip:padding-box;
 	-moz-background-clip:padding-box;
-	border:rgba(0,0,0,.35) 4px solid;
-  -webkit-border-radius:8px;
-  background:#F0EAD8 url('/images/dialogbg.png');
+	border:1px solid #ddd;
+  box-sizing:border-box;
+/*  background:#F0EAD8 url('/images/dialogbg_2.png'); */
 	background-clip:padding-box;
-  -webkit-box-shadow:rgba(0,0,0,.18) 0px 0px 8px 2px;
-  max-height:600px;
-  overflow-y:auto;
+/*  -webkit-box-shadow:rgba(0,0,0,.25) 0px 4px 4px 0px;*/
 }
 
 #main_stream {
+  display:none;
 /*  border-right:1px solid rgba(0,0,0,.1);*/
 } 
 
@@ -306,15 +392,13 @@ span.short_list {
         
 /* Messaging */
 
-#message {
-	position:fixed;
-	width:960px;
+#message {            
+  position:absolute;
+  padding:12px inherit;
 	z-index:999;
 	top:58px;  
-	min-width:960px;
 	font-size:20px;
 	font-weight:bold;
-	padding:14px 0px;
 	text-shadow:rgba(255,255,255,.5) 0px 1px 0px;
 } 
 
@@ -327,13 +411,9 @@ span.short_list {
 
 .message {
  font-family:'Helvetica Neue', Helvetica, Arial;
-position: fixed;
-width:960px;
 z-index: 105;
-top: 50px;
 font-size: 18px;
 font-weight: bold;
-padding: 12px 0px;
 text-shadow: rgba(255,255,255,.5) 0px 1px 0px; 
 text-align:right;
 }

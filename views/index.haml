@@ -1,20 +1,9 @@
-%form.publisher.grid_12
-  =text_field_tag :message, :placeholder => "Say something&hellip;"
+- if session[:userid]
+  .page.index
+  %form.publisher.grid_12
+    =text_field_tag :message, :placeholder => "Say something&hellip;"
 
-.clear.vspace_3
-.main_divider
-.clear.vspace
-.scroller.grid_10
-  .messages#main_stream
-    %p.command
-      %a.pull{href:'/chat'}Load More
-
-.grid_2.right
-  %p.generous
-    %button{class: "local_popup small", value: "channel:join"}
-      Join Room
-
-    %button{class: "local_popup small", value: "channel:create"}
-      Start a Channel
-  .sidebars
-    %ul
+  .clear.vspace_1
+- else
+  :javascript
+    $$('.nav ul')[0].insert({bottom:"<li class='command'><a href='/auth/facebook'>Login with Facebook</a></li>"});

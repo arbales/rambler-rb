@@ -1,3 +1,10 @@
+GIT
+  remote: git://github.com/arbales/postmark-gem.git
+  revision: 45f144ae2179435164f7b1f5ff1baed06c8ce0cb
+  specs:
+    postmark (0.9.5)
+      tmail
+
 GEM
   remote: http://rubygems.org/
   specs:
@@ -16,6 +23,10 @@ GEM
       addressable (>= 2.0.0)
       eventmachine (>= 0.12.9)
     eventmachine (0.12.10)
+    faraday (0.5.3)
+      addressable (~> 2.2.2)
+      multipart-post (~> 1.0.1)
+      rack (>= 1.1.0, < 2)
     faye (0.5.2)
       em-http-request (>= 0.2)
       eventmachine (>= 0.12)
@@ -28,6 +39,12 @@ GEM
       url_mount (>= 0.2.1)
     i18n (0.4.1)
     json (1.4.6)
+    mail (2.2.12)
+      activesupport (>= 2.3.6)
+      i18n (>= 0.4.0)
+      mime-types (~> 1.16)
+      treetop (~> 1.4.8)
+    mime-types (1.16)
     mongo (1.0.9)
       bson (>= 1.0.5)
     mongoid (2.0.0.beta.19)
@@ -35,6 +52,43 @@ GEM
       mongo (= 1.0.9)
       tzinfo (~> 0.3.22)
       will_paginate (~> 3.0.pre)
+    multi_json (0.0.5)
+    multipart-post (1.0.1)
+    net-ldap (0.1.1)
+    nokogiri (1.4.4)
+    oa-basic (0.1.6)
+      multi_json (~> 0.0.2)
+      nokogiri (~> 1.4.2)
+      oa-core (= 0.1.6)
+      rest-client (~> 1.6.0)
+    oa-core (0.1.6)
+      rack (~> 1.1)
+    oa-enterprise (0.1.6)
+      net-ldap (~> 0.1.1)
+      nokogiri (~> 1.4.2)
+      oa-core (= 0.1.6)
+      pyu-ruby-sasl (~> 0.0.3.1)
+      rubyntlm (~> 0.1.1)
+    oa-oauth (0.1.6)
+      multi_json (~> 0.0.2)
+      nokogiri (~> 1.4.2)
+      oa-core (= 0.1.6)
+      oauth (~> 0.4.0)
+      oauth2 (~> 0.1.0)
+    oa-openid (0.1.6)
+      oa-core (= 0.1.6)
+      rack-openid (~> 1.2.0)
+      ruby-openid-apps-discovery
+    oauth (0.4.4)
+    oauth2 (0.1.0)
+      faraday (~> 0.5.0)
+      multi_json (~> 0.0.4)
+    omniauth (0.1.6)
+      oa-basic (= 0.1.6)
+      oa-core (= 0.1.6)
+      oa-enterprise (= 0.1.6)
+      oa-oauth (= 0.1.6)
+      oa-openid (= 0.1.6)
     padrino-core (0.9.18)
       activesupport (>= 3.0.0)
       http_router (~> 0.4.0)
@@ -44,7 +98,18 @@ GEM
     padrino-helpers (0.9.18)
       i18n (>= 0.4.1)
       padrino-core (= 0.9.18)
+    polyglot (0.3.1)
+    pyu-ruby-sasl (0.0.3.2)
     rack (1.2.1)
+    rack-openid (1.2.0)
+      rack (>= 1.1.0)
+      ruby-openid (>= 2.1.8)
+    rest-client (1.6.1)
+      mime-types (>= 1.16)
+    ruby-openid (2.1.8)
+    ruby-openid-apps-discovery (1.2.0)
+      ruby-openid (>= 2.1.7)
+    rubyntlm (0.1.1)
     sinatra (1.0)
       rack (>= 1.0)
     thin (1.2.7)
@@ -52,6 +117,9 @@ GEM
       eventmachine (>= 0.12.6)
       rack (>= 1.0.0)
     thor (0.14.3)
+    tmail (1.2.7.1)
+    treetop (1.4.9)
+      polyglot (>= 0.3.1)
     tzinfo (0.3.23)
     url_mount (0.2.1)
       rack
@@ -67,9 +135,12 @@ DEPENDENCIES
   faye
   haml
   json
+  mail
   mongo (= 1.0.9)
   mongoid (= 2.0.0.beta.19)
+  omniauth
   padrino-core
   padrino-helpers
+  postmark!
   sinatra
   thin

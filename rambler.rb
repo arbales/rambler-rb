@@ -1,15 +1,16 @@
 get '/favicon.ico' do
   expires 31536000
-  status 200
+  pass
 end     
 
 error do
-  if request.xhr?
+  if request.xhr?  
     abmessage :error, "Sorry, Rambler got befuddled while doing its thing. Try again."
   else
+    puts "!! Finding error thing."
     haml :error
   end
-end 
+end
 
 not_found do  
   status 404
@@ -20,9 +21,44 @@ not_found do
   end
 end
 
-get '/' do   
+get '/' do  
+  @js = ["ABApp.authorize('#{session[:token]}', '#{session[:username]}', '#{session[:userid]}')"]
   haml :index         
+end     
+
+get '/logout' do
+  session[:u_full_name] = nil
+  session[:u_image] = nil
+  session[:token] = nil
+  session[:username] = nil
+  session[:userid] = nil
+  redirect "/"
 end
+
+get '/auth/:name/callback' do
+    auth = request.env['omniauth.auth']
+    # do whatever you want with the information!
+    person = Person.where("#{params[:name]}_uid".to_sym => auth['uid'])[0]     
+    
+    if person != nil   
+      person.key = BCrypt::Engine.generate_salt                      
+      session[:u_full_name] = auth['user_info']['name']
+      session[:u_image] = (params[:name] == "facebook") ? ("https://graph.facebook.com/"+ auth['user_info']['nickname'] + "/picture") : (auth['user_info']['image'])
+      person[:fb_image] = session[:u_image]
+      session[:token] = Digest::SHA1.hexdigest(person.key + "salt" + person.username)
+      session[:username] = person.username
+      session[:userid] = person.id             
+      person.save
+      
+      redirect "/"
+    else
+      #person = Person.first(:conditions => { :username => session[:username]})     
+      #person[:facebook_uid] = auth['uid']
+      #person.save
+      abmessage :error, "Facebook user is not associated with an account."
+    end  
+                         
+end 
 
 get '/create-account' do
   haml :register
@@ -31,7 +67,7 @@ end
 post '/register' do
   username = params[:email].sub("@odopod.com","")
   person = Person.new(:username => username,
-                         :key => Digest::SHA1.hexdigest(username))
+                         :key => BCrypt::Engine.generate_salt)
   if person.save
     redirect "/token/#{username}"                         
   else
@@ -39,7 +75,13 @@ post '/register' do
   end
 end
 
-get '/archive/mentions/:username' do
+get '/archive/mentions/:username' do  
+  
+  person = Person.criteria.id(params[:api_user_id]).limit(1)[0]
+  unless person && person.username == params[:username] && person.verify(params[:api_user_key])
+    error 403, "You aren't authorized to read this stream."
+  end
+  
   if params[:before] != 'false'
     mentions =  Post.where(:channel => "/mentions/#{params[:username]}")
                     .where(:created_at.lt => params[:before])
@@ -48,11 +90,11 @@ get '/archive/mentions/:username' do
     since = (params[:since] != 'false') ? params[:since] : DateTime.new   
     mentions =  Post.where(:channel => "/mentions/#{params[:username]}")
                     .where(:created_at.gt => since)
-                    .limit(20)
+                    .limit(50)
                     .descending(:created_at)
     if mentions.count == 0
       mentions =  Post.where(:channel => "/mentions/#{params[:username]}")
-                      .limit(20)
+                      .limit(50)
                       .descending(:created_at)
     end                                    
   end
@@ -61,6 +103,12 @@ get '/archive/mentions/:username' do
 end
 get '/archive/:channel' do
   # Add AUTH!
+  
+  person = Person.criteria.id(params[:api_user_id]).limit(1)[0]
+  unless person && person.verify(params[:api_user_key])
+    error 403, "You aren't authorized to read this stream."
+  end
+  
   if params[:before] != 'false'
     mentions =  Post.where(:channel => "/#{params[:channel]}")
                     .where(:created_at.lt => params[:before])
@@ -69,11 +117,11 @@ get '/archive/:channel' do
     since = (params[:since] != 'false') ? params[:since] : DateTime.new
     mentions =  Post.where(:channel => "/#{params[:channel]}")
                     .where(:created_at.gt => since)
-                    .limit(20)
+                    .limit(50)
                     .descending(:created_at)
     if (mentions.count == 0 && !params[:only_current])
       mentions =  Post.where(:channel => "/#{params[:channel]}")
-                      .limit(20)
+                      .limit(50)
                       .descending(:created_at)
     end                                    
   end
@@ -88,16 +136,6 @@ post '/publish' do
     })  
 end
 
-post '/login' do
-  puts params
-  key = Digest::SHA1.hexdigest(params[:password]) 
-  person = Person.where(username: params[:username]).where(key: key)
-  if person[0] != nil
-    "Success"
-  else
-    "Failure"
-  end
-end
 
 get '/people' do
   @people = Person.all
@@ -176,8 +214,6 @@ get '/channel/destroy/:id' do
   haml :destroy_confirm, layout: !request.xhr?
 end  
 
-get '/token/:username' do
-  @person = Person.first(:conditions => { :username => params[:username]})     
-  @token = Digest::SHA1.hexdigest(@person.key + "salt" + @person.username)
-  haml :tokenstand
-end
+get '/hbs/:name.hbs' do
+ partial params[:name]
+end 

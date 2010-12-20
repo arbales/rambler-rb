@@ -16,6 +16,10 @@ def ('StorageManager')({
   set: function(key, value){
     localStorage.setItem(key, value);
     return value; // Look how easily that chains...
+  },
+  unset: function(key){
+    localStorage.removeItem(key);
+    return null;
   }
 });  
 
@@ -119,14 +123,17 @@ def ("SubscriptionManager")({
     return this;
   },
   showStreamContainer: function(button){
+    if (button === undefined){
+      var button = this.tracker;
+    }
     $$('.popup_stream').without(this.element).invoke('hide');
     $$('li.tracker').without(button).invoke('removeClassName','active');
     // Clones the position of the tracker onto the stream container.
-    Element.clonePosition(this.element, button, {
-      setWidth:false,
-      setHeight:false,
-      offsetTop: 45,
-      offsetLeft: -255});
+    /*Element.clonePosition(this.element, $('main_stream'), {
+        setHeight:false
+      }); */
+      this.element.addClassName("grid_12");
+    //this.element.setStyle("height:600px;");
     
     // Updates visual states.  
     if (button.hasClassName('active')){
@@ -138,7 +145,8 @@ def ("SubscriptionManager")({
 			button.addClassName('active');
 		}
     
-    this.element.toggle();
+    this.element.toggle(); 
+    return this;
   },
   // Add a function to `ubscriptionManager` to call at a given point. 
   // Hooks include:
@@ -245,11 +253,15 @@ def ("SubscriptionManager")({
       // If date != false, the server will return only the posts created
       // since the date — if there are none, the server will fall back 
       // to pagination and return the first 20 posts. 
-      parameters: {since: date, before: self.last_xhr_timestamp},
+      parameters: { since: date,
+                    before: self.last_xhr_timestamp,
+                    api_user_id: ABApp.sharedStorageManager().get('userid'),
+                    api_user_key: ABApp.sharedStorageManager().get('token')
+                  },
       onSuccess: function(transport){
         var data = transport.responseText.evalJSON().reverse();
         if (data.size() == 0){
-          self.element.down('.command .pull').update('End of Stream').removeClassName("pull").addClassName("inactive");
+          self.element.down('.command .pull').update('No more messages&hellip;').removeClassName("pull").addClassName("inactive");
         }
         
         // If this manager hasn't performed an XHR pull before, then
@@ -267,7 +279,7 @@ def ("SubscriptionManager")({
           data.each(function(message){
             self.last_xhr_timestamp = message.created_at;
             var el = new Element("p");
-            self.element.down('p.command').insert({before:el.update(message.text)});
+            self.element.down('p.command').insert({before:el.update("<span class='user'>"+message.username+"</span>"+message.text)});
           });
         }
         
@@ -278,6 +290,10 @@ def ("SubscriptionManager")({
           _onContentInserted.bind(this)();
         }
         this.getHook('pulledContent').bind(this, transport)();
+      },
+      on403: function(transport){ 
+        this.subscription.cancel();
+        this.unregisterElements();
       },
       on500: this.getHook('pull500').bind(this),
       onComplete: this.getHook('pullComplete').bind(this)
@@ -320,7 +336,7 @@ def ("SubscriptionManager")({
           this.incrementCounter();
         }
       }
-      el.update("<span class='user'>" + message.username + "</span><span class='text'>" + message.text+"</span>").hide();
+      el.update("<span class='user'>" + message.username + "</span><span class='text'>" + message.text+"</span><span class='controls'><input type='image' src='/images/reply.png' class='reply'/></span>").hide();
       this.element.insert({top: el.appear()});      
         
       Event.addBehavior.reload.defer(); 

@@ -18,16 +18,24 @@ ClientAuth = {
   incoming: function(message, callback){
     if (message.username == undefined){
       message.username = 'rambo';
-    }
+    }                                
+
     if (message.channel == "/meta/subscribe" && message.successful == false){
-      message.text = message.error;  
-      //ABApp.channels[message.channel_reference].cancel();
+      message.text = message.error;   
+      if (message.error == "You are not logged in."){
+        ABApp.deauthorize();
+        $$('.account')[0].remove(); 
+        setTimeout(function() {
+          window.location.href="/logout";
+        }, 400);
+      }
       ABApp.channels['chat'].receive(message);
+      //ABApp.channels[message.channel_reference].cancel();
     } else if (message.channel == "/meta/subscribe" && message.successful == true){
-      ABApp.stream.client.publish(message.subscription[0], {
+      /*ABApp.stream.client.publish(message.subscription[0], {
         text:(" joined the conversation on " + message.subscription[0]), 
         username: ABApp.channels['chat'].getUsername(), 
-        persists: "false"});
+        persists: "false"}); */
     }
     callback(message);
   }

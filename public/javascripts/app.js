@@ -1,4 +1,17 @@
-// ## Application Code
+// ## Application Code   
+
+ABApp.authorize = function(token, username, userid){
+  ABApp.sharedStorageManager().set('token', token);
+  ABApp.sharedStorageManager().set('username', username);
+  ABApp.sharedStorageManager().set('userid', userid);
+};
+
+ABApp.deauthorize = function(){
+  ABApp.sharedStorageManager().unset('token');
+  ABApp.sharedStorageManager().unset('username');
+  ABApp.sharedStorageManager().unset('userid');
+  return true;
+};
 
 // Wait for the document to be ready.
 document.observe('dom:loaded', function(){
@@ -31,21 +44,7 @@ document.observe('dom:loaded', function(){
   // Add extensions
   ABApp.stream.client.addExtension(ClientAuth); 
   ABApp.stream.client.addExtension(MentionHandler);
-  ABApp.stream.client.addExtension(GroupFilter);   
-  
-  
-  if($$('.save_auth_token').size() > 0) { // End of if logged in block.
-    var el =$$('.save_auth_token').first();
-    var token = $F(el.down("input[type=text][name=token]"));
-    var username = $F(el.down("input[type=text][name=username]"));
-    var userid = $F(el.down("input[type=text][name=userid]"));
-    ABApp.sharedStorageManager().set('token', token);
-    ABApp.sharedStorageManager().set('username', username);
-    ABApp.sharedStorageManager().set('userid', userid);
-
-    window.location.href = "/";
-  }     
-       
+  ABApp.stream.client.addExtension(GroupFilter);             
   
   // ### Event Delegation
   Event.addBehavior({  
@@ -63,15 +62,22 @@ document.observe('dom:loaded', function(){
         return ABApp.channels['chat'].send("left the chat.");
       }
       
-    }, 
-    "button.local_popup:click":function(event){
-      EUWindowWaker.wake(this.value);
+    },
+    "button.local_popup:click,a.local_popup:click":function(event){ 
+      Event.stop(event); 
+      if (this.value ===undefined){
+        var value = this.readAttribute('value')
+      } else {
+        var value = this.value;
+      }
+      EUWindowWaker.wake(value);
     },        
     // Publisher for the main chat channel. 
     "form.publisher:submit":function(event){
       Event.stop(event);
       var el = this.down('input[type=text]');
-      ABApp.channels['chat'].send($F(el));
+      var channel = $$('li.tracker.active').first().readAttribute('data-channel'); 
+      ABApp.channels[channel].send($F(el));
       el.clear();
     }, 
     "form.publisher input[type=text]:drop":function(event){
@@ -124,7 +130,7 @@ document.observe('dom:loaded', function(){
     // Open the mentions panel.
     "li.tracker:click":function(){
       var self = this;
-      var channel = this.readAttribute('data-channel');
+      var channel = this.readAttribute('data-channel'); 
       ABApp.channels[channel].showStreamContainer(self);
     },         
     // Load additional mentions.
@@ -178,6 +184,55 @@ document.observe('dom:loaded', function(){
       if (el.hasClassName("_sender_closes")){
         EUWindow.destroyWindow(el.up(".EUWindow"));
       }
+    },
+    "a[href='/logout']:click":function(event){
+      Event.stop(event);
+      if (ABApp.deauthorize()) {
+        window.location.href = '/logout'
+      }
+    },                  
+    'h1 a img':function(event){      
+      var self = this;
+      var el = new Element('img');
+      el.addClassName('logo_hover');
+      el.src = "/images/logo_hover.png";
+      this.up('h1').appendChild(el.absolutize());
+      Element.clonePosition(el, self);
+      el.hide().setStyle("width:auto;height:auto;");
+    },
+    ".page.index":function(event){   
+        $$('.nav ul')[0].insert('<li class="command"><a class="local_popup small" href="#" value="channel:join">Add</a></li>');
+        /*$$('.nav ul')[0].insert('<li class="command"><a class="local_popup small" href="#" value="channel:create">Create</a></li>');*/
+
+        ABApp.channels['chat'] = new SubscriptionManager(["chat"]).aka("main")
+                                                                  .createTracker()
+                                                                  .createStreamContainer()
+                                                                  .addBehavior('popstream')
+                                                                  .showStreamContainer();
+
+      //
+      // This checks to see if there are any mentions in the mention stream container.
+      // If there aren't, it'll run XHR to get all the mentions since the last time
+      // the user pulled from this browser. Presently the server does not persist
+      // a user's access history, although that is also planned. 
+      // 
+
+      //  Create an instance of SubscritionManager to watch for and handle mentions.
+
+
+          ABApp.channels['mentions/'+ABApp.sharedStorageManager().get('username')] = new SubscriptionManager(['mentions/'+ABApp.sharedStorageManager().get('username')]);
+          ABApp.channels['mentions/'+ABApp.sharedStorageManager().get('username')]
+    					 .aka('@'+ABApp.sharedStorageManager().get('username'))
+    					 // Register a tracker element for the channel.
+    			     .createTracker()
+    			     // This creates an element from an HBS template that handles the streams.
+    			     .createStreamContainer()
+    					 .addBehavior('popstream');
+
+        SubscriptionWaker();
+    },
+    '.controls .reply:hover':function(event){
+      this.src = '/images/reply_hover.png';
     }
   });
                       
@@ -185,30 +240,11 @@ document.observe('dom:loaded', function(){
                                  
   // Automatically logs a user in if their token is saves.
   if (ABApp.sharedStorageManager().get('username') != ""){
-    ABApp.channels['chat'] = new SubscriptionManager(["chat"]).setStreamContainer($('main_stream')).addBehavior('popstream');  
-    if ($$('.login').size() > 0){
-      $$('.login').first().fade();
-      $$('form.publisher').first().appear();
-    }
-      
-  //
-  // This checks to see if there are any mentions in the mention stream container.
-  // If there aren't, it'll run XHR to get all the mentions since the last time
-  // the user pulled from this browser. Presently the server does not persist
-  // a user's access history, although that is also planned. 
-  // 
-  
-  //  Create an instance of SubscritionManager to watch for and handle mentions.
-      ABApp.channels['mentions/'+ABApp.sharedStorageManager().get('username')] = new SubscriptionManager(['mentions/'+ABApp.sharedStorageManager().get('username')]);
-      ABApp.channels['mentions/'+ABApp.sharedStorageManager().get('username')]
-					 .aka('mentions')
-					 // Register a tracker element for the channel.
-			     .createTracker()
-			     // This creates an element from an HBS template that handles the streams.
-			     .createStreamContainer()
-					 .addBehavior('popstream');
-                                            
-    SubscriptionWaker();
+    /*ABApp.channels['chat'] = new SubscriptionManager(["chat"]).setStreamContainer($('main_stream'))
+                                                              .addBehavior('popstream'); */
+                                                              
+
+
   }
   
 });
