@@ -18,6 +18,8 @@ GEM
     bson (1.1.1)
     bson_ext (1.1.1)
     builder (2.1.2)
+    carrierwave (0.5.1)
+      activesupport (~> 3.0)
     daemons (1.1.0)
     em-http-request (0.2.14)
       addressable (>= 2.0.0)
@@ -131,6 +133,7 @@ PLATFORMS
 DEPENDENCIES
   bcrypt-ruby
   bson_ext (= 1.1.1)
+  carrierwave
   eventmachine
   faye
   haml

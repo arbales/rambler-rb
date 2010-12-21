@@ -15,9 +15,13 @@ class ServerAuth
     
   begin
     
-    unless (msg_token && msg_user && msg_userid && Person.criteria.id(msg_userid).limit(1)[0].verify(msg_token)) 
+    person = Person.criteria.id(msg_userid).limit(1)[0]
+    person = person ? person.verify(msg_token) : false
+    
+    unless (msg_token && msg_user && msg_userid && person)
       message['ext']['status'] = 'logout'
-      message['error'] = "You are not logged in."
+      message['error'] = "You are not logged in."  
+     
 #      raise NotLoggedIn
     end
     
@@ -46,7 +50,7 @@ class ServerAuth
   rescue NotLoggedIn
     message['ext']['channel_reference'] = subscription
     message['error'] = "You are not logged in."
-  rescue => e
+  rescue => e 
     message['ext']['channel_reference'] = subscription
     message['error'] = "You couldn't join #{subscription} because of a permissions problem."
   ensure
@@ -58,28 +62,49 @@ end
 
 class Archiver
   def incoming(message, callback)
+    
     if (message['data']['text'] rescue false)
       message['data']['text'].gsub!(/(?:^|\s).*\..*\/.*(\.jpg|\.jpeg|\.png|\.gif|\.tif|\.tiff|\.JPG|\.PNG|\.JPEG)(?=\s|$)/){|s|
         "<img src='#{s}'/>"
       }
     end
     
-    begin
+    begin   
+      
       if ((message['data']['text'] && message['data']['username'] && message['channel'] && message['data']['persists'] != 'false') rescue false)
-
+        
         tokens = message['data']['text'].split(" ")        
-
+        message['data']['_id'] = message['id']
+        
         if(!(message['channel'].start_with?("/mentions")))
-          Post.create(:text => message['data']['text'], :channel => message['channel'], :username => message['data']['username'])
-        end
+          post = Post.new(:_id => message['id'],
+                      :text => message['data']['text'],
+                      :channel => message['channel'],
+                      :username => message['data']['username'])
+          if message['data']['reply']
+            post['reply'] = message['data']['reply']
+          end
+          post.save()
+        end 
+        
+        
         if (tokens[0].start_with?("@") && !(message['channel'].start_with?("/mentions")))
-          Post.create(:text => message['data']['text'], :channel => "/mentions/#{tokens[0].sub('@', '')}", :username => message['data']['username'])
+          
+          post = Post.create(:_id => message['id'],
+                      :text => message['data']['text'],
+                      :channel => "/mentions/#{tokens[0].sub('@', '')}",
+                      :username => message['data']['username'])
           
           $faye.get_client.publish("/mentions/#{tokens[0].sub('@', '')}", {
             'text'      => message['data']['text'],
             'username' => message['data']['username']
           })
         end
+        
+        if post && post.created_at
+          message['data']['created_at'] = post.created_at
+        end
+          
         
         
       end

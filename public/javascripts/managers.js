@@ -267,7 +267,7 @@ def ("SubscriptionManager")({
         // If this manager hasn't performed an XHR pull before, then
         // it will just receive the posts like normal, and note the timestamp
         // of the earliest post it got.
-        if (self.last_xhr_timestamp == false){
+        if (self.last_xhr_timestamp == false){ 
           self.last_xhr_timestamp = data[0].created_at;
           data.each(function(message){
             self.receive(message);
@@ -276,10 +276,10 @@ def ("SubscriptionManager")({
         // alerting the user, and insert them at the bottom of the streamContainer.
         // This should be methodized.
         }else{
-          data.each(function(message){
+          data.each(function(message){ 
+            
             self.last_xhr_timestamp = message.created_at;
-            var el = new Element("p");
-            self.element.down('p.command').insert({before:el.update("<span class='user'>"+message.username+"</span>"+message.text)});
+            self.receive_backwards(message);
           });
         }
         
@@ -311,12 +311,14 @@ def ("SubscriptionManager")({
   // Receive a message on this subscription and insert it into an element as a `p` tag. If no element was provided
   // log the message.
   // *TODO* persist undisplayed messages in localStorage for later display.
-  receive: function(message){ 
+  receive: function(message){   
     var date = ABApp.sharedStorageManager().get('channel:'+this.channels[0].sub("/","_",5)+':pull');
        
     if (this.element){
+      var el = new Element("div");
+      el.addClassName('message');
       
-      var el = new Element("p");
+      el.writeAttribute('data-mid', ((message._id != undefined) ? message._id : message.id));
       if (message.created_at == undefined){
         if (message.persists == 'false'){el.addClassName("persists-false");}else{this.incrementCounter()}
         if (message.invitation != undefined){
@@ -336,8 +338,53 @@ def ("SubscriptionManager")({
           this.incrementCounter();
         }
       }
-      el.update("<span class='user'>" + message.username + "</span><span class='text'>" + message.text+"</span><span class='controls'><input type='image' src='/images/reply.png' class='reply'/></span>").hide();
-      this.element.insert({top: el.appear()});      
+      
+      el.update("<ul class='meta'><li class='user'>" + message.username + "</li><li class='timestamp'>"+((message.created_at != undefined) ? ISODate.convert(message.created_at).strftime("%l:%M%P") : "")+"</li></ul><p class='text'>" + message.text+"</p><p class='controls'><input type='image' src='/images/reply.png' class='reply'/><span class='count'></span></p>").hide();
+      if (message.reply){
+       var p = $$("div[data-mid='"+message.reply+"']")[0];
+       if (p != undefined){
+         p.insert({after:el.addClassName('reply').appear({engine:'javascript'})});
+         p.addClassName('has_replies')
+         var counter = p.down('.count');
+         var count = parseInt(counter.innerHTML) || 0;
+         count++;
+         counter.update(count);
+       }
+      }else{
+        this.element.insert({top: el.appear({engine:'javascript'})});      
+      }
+             
+        
+      Event.addBehavior.reload.defer(); 
+    } else{
+      /*console.log("Unrouted Message:" + message.text);*/
+    }
+  },               
+  receive_backwards: function(message){         
+    if (this.element){
+      var el = new Element("p");   
+      el.writeAttribute('data-mid', ((message._id != undefined) ? message._id : message.id));
+      if (message.created_at == undefined){
+        if (message.persists == 'false'){el.addClassName("persists-false");}else{this.incrementCounter()}
+        if (message.invitation != undefined){
+          el.addClassName('invitation');
+          el.writeAttribute('data-channel', message.invitation);
+        }
+        if (message.username != this.getUsername()){
+          this.highlightCounter();
+        }
+      }
+      el.update("<ul class='meta'><li class='user'>" + message.username + "</li><li class='timestamp'>"+((message.created_at != undefined) ? ISODate.convert(message.created_at).strftime("%I:%M%P") : "")+"</li></ul><p class='text'>" + message.text+"</p><p class='controls'><input type='image' src='/images/reply.png' class='reply'/><span class='count'></span></p>").hide();
+      if (message.reply){
+       var p = $$("div[data-mid='"+message.reply+"']")[0].insert({after:el.addClassName('reply').appear()});
+       p.addClassName('has_replies')
+       var counter = p.down('.count');
+       var count = parseInt(counter.innerHTML) || 0;
+       count++;
+       counter.update(count);
+      }else{
+        this.element.insert({buttom: el.appear()});      
+      }
         
       Event.addBehavior.reload.defer(); 
     } else{

@@ -6,21 +6,23 @@
       =javascript_include_tag 'deploy.js'
     - else
       =stylesheet_link_tag 'reset', 'grid', 'style'
-      = javascript_include_tag '/faye.js','faye_ext','def', 'sha1','prototype.s2.min','handlebars','templates','euwindow', 'abmessage', 'lowpro','managers','abapp','app'
+      = javascript_include_tag 'strftime', '/faye.js','faye_ext','def', 'sha1','prototype.s2.min','handlebars','templates','euwindow', 'abmessage', 'lowpro','managers','abapp','app'
     - if @js  
       - @js.each do |js|
         :javascript
           #{js}
 %body
-  .container_12#container
     
-    =flash_tag(:success, :class => 'message success', :id => 'flash-success')
-    =flash_tag(:notice, :class => 'message notice', :id => 'flash-notice')
-    =flash_tag(:error, :class => 'message error', :id => 'flash-error')   
-    #app_element{:style => "display:none;"} 
-    #message.grid_12{:style => "display:none;"}
-      %p
-  
+  =flash_tag(:success, :class => 'flash success', :id => 'flash-success')
+  =flash_tag(:notice, :class => 'flash notice', :id => 'flash-notice')
+  =flash_tag(:error, :class => 'flash error', :id => 'flash-error')   
+  #app_element{:style => "display:none;"} 
+  #flash{:style => "display:none;"}
+    %p   
+  .container_12#container
+    .grid_12#loader
+      .clear.vspace_2
+      %img.spinner.small{src:'/images/spinner.png'}  
     .grid_6.header
       %h1
         %a{href: '/'}
@@ -47,8 +49,5 @@
         %ul>
               
     =yield
-
-    .grid_12.alpha#footer{style: "display:none"}
-      %p
-        An Odopod joint.
     .clear
+    #scroll_top.hidden    

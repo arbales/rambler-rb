@@ -9,41 +9,23 @@ get '/auth/:name/callback' do
     # do whatever you want with the information!
     person = Person.where("#{params[:name]}_uid".to_sym => auth['uid'])[0]     
     
-    if person != nil   
-      person.key = BCrypt::Engine.generate_salt                      
-      session[:u_full_name] = auth['user_info']['name']
-      session[:u_image] = (params[:name] == "facebook") ? ("https://graph.facebook.com/"+ auth['user_info']['nickname'] + "/picture") : (auth['user_info']['image'])
-      person[:fb_image] = session[:u_image]
-      session[:token] = Digest::SHA1.hexdigest(person.key + "salt" + person.username)
-      session[:username] = person.username
-      session[:userid] = person.id             
-      person.save
+    unless person
+      person = Person.create(:username => auth['user_info']['nickname'],
+                             :key => BCrypt::Engine.generate_salt,
+                             "#{params[:name]}_uid".to_sym => auth['uid'],
+                             :fb_image => session[:u_image])
+    end
+   
+    session[:u_full_name] = auth['user_info']['name']
+    session[:u_image] = (params[:name] == "facebook") ? ("https://graph.facebook.com/"+ auth['user_info']['nickname'] + "/picture") : (auth['user_info']['image'])
+    session[:token] = Digest::SHA1.hexdigest(person.key + "salt" + person.username)
+    session[:username] = person.username
+    session[:userid] = person.id                       
+    redirect "/"   
       
-      redirect "/"
-    else
-      #person = Person.first(:conditions => { :username => session[:username]})     
-      #person[:facebook_uid] = auth['uid']
-      #person.save
-      abmessage :error, "Facebook user is not associated with an account."
-    end  
                          
 end 
-
-get '/create-account' do
-  haml :register
-end
-
-post '/register' do
-  username = params[:email].sub("@odopod.com","")
-  person = Person.new(:username => username,
-                         :key => BCrypt::Engine.generate_salt)
-  if person.save
-    redirect "/token/#{username}"                         
-  else
-    abmessage :error, "Your user account could not be created."
-  end
-end
-  
+ 
 get '/logout' do
   session[:u_full_name] = nil
   session[:u_image] = nil
@@ -52,12 +34,6 @@ get '/logout' do
   session[:userid] = nil
   redirect "/"
 end
-  
-
-
-             
-                                                  
-
 
 def rack_protected!
   response['WWW-Authenticate'] = %(Basic realm="Podium Core") and \

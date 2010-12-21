@@ -74,7 +74,9 @@ EUTemplateArchive = {
     /*classNames: ['messages', 'popup_stream'],
     type: 'div',
     style: 'display:none',*/
-    template: "<div class='messages popup_stream' data-channel='{{channel}}' style='display:none'>{{contents}}<p class='command controls'><a class='pull' href='/{{channel}}'>Load More</a> <a class='focus minor' href='/{{channel}}'>Focus</a> <a class='leave minor' href='/{{channel}}'><img src='/images/cancel.png'/></a></p>"
+    template: "<div class='messages popup_stream' data-channel='{{channel}}' style='display:none'>{{contents}}<div class='message command'><a class='pull' href='/{{channel}}'><img src='/images/load_more.png' alt='Load More'/></a> <a class='focus minor' href='/{{channel}}'><img src='/images/view.png'/></a> <a class='leave minor' href='/{{channel}}'><img src='/images/close.png'/></a></div>"
+  },
+  'expanded_publisher': {
   } 
 }     
 

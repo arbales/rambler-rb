@@ -13,4 +13,5 @@ gem 'mongo', '1.0.9'
 gem 'mongoid', '2.0.0.beta.19'
 gem 'omniauth'
 gem 'mail'
+gem 'carrierwave'
 gem 'postmark', :git => "git://github.com/arbales/postmark-gem.git"

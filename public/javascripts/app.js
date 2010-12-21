@@ -21,9 +21,9 @@ document.observe('dom:loaded', function(){
     // We want to add specific behavior for the beginning of this pull.
     // This stuff should be abstracted into a module, since it applies to any streams with a reload button.
 		.addHook('pullBegin', function(){
-      this.element.down(".command a").update("Fetching messages&hellip;");})
+      this.element.down(".command a").update("<div class='spinner small' alt='Loading'></div>");})
     .addHook('pullComplete', function(){
-      this.element.down(".command a.pull").update("Load More");})
+      this.element.down(".command a.pull").update("<img src='/images/load_more.png' alt='Load More'/>");})
     .addHook('pull500', function(){
       this.element.down(".command").update("Unable to connect to archive.");
     })
@@ -42,9 +42,11 @@ document.observe('dom:loaded', function(){
   ABApp.stream.client = new Faye.Client('http://bubbles.local/faye');
   
   // Add extensions
-  ABApp.stream.client.addExtension(ClientAuth); 
+  ABApp.stream.client.addExtension(MessageIDHandler);
+  ABApp.stream.client.addExtension(ClientAuth);
   ABApp.stream.client.addExtension(MentionHandler);
   ABApp.stream.client.addExtension(GroupFilter);             
+  ABApp.stream.client.addExtension(Threader);             
   
   // ### Event Delegation
   Event.addBehavior({  
@@ -184,6 +186,9 @@ document.observe('dom:loaded', function(){
       if (el.hasClassName("_sender_closes")){
         EUWindow.destroyWindow(el.up(".EUWindow"));
       }
+    },   
+    "a.inactive:click":function(event){
+      Event.stop(event);
     },
     "a[href='/logout']:click":function(event){
       Event.stop(event);
@@ -200,11 +205,14 @@ document.observe('dom:loaded', function(){
       Element.clonePosition(el, self);
       el.hide().setStyle("width:auto;height:auto;");
     },
+    "#loader":function(){
+      this.fade({delay:.3});
+    },
     ".page.index":function(event){   
         $$('.nav ul')[0].insert('<li class="command"><a class="local_popup small" href="#" value="channel:join">Add</a></li>');
         /*$$('.nav ul')[0].insert('<li class="command"><a class="local_popup small" href="#" value="channel:create">Create</a></li>');*/
 
-        ABApp.channels['chat'] = new SubscriptionManager(["chat"]).aka("main")
+        ABApp.channels['chat'] = new SubscriptionManager(["chat"]).aka("<img src='/images/home.png' />")
                                                                   .createTracker()
                                                                   .createStreamContainer()
                                                                   .addBehavior('popstream')
@@ -222,7 +230,7 @@ document.observe('dom:loaded', function(){
 
           ABApp.channels['mentions/'+ABApp.sharedStorageManager().get('username')] = new SubscriptionManager(['mentions/'+ABApp.sharedStorageManager().get('username')]);
           ABApp.channels['mentions/'+ABApp.sharedStorageManager().get('username')]
-    					 .aka('@'+ABApp.sharedStorageManager().get('username'))
+    					 .aka('<img src="/images/mention.png" />')
     					 // Register a tracker element for the channel.
     			     .createTracker()
     			     // This creates an element from an HBS template that handles the streams.
@@ -231,8 +239,12 @@ document.observe('dom:loaded', function(){
 
         SubscriptionWaker();
     },
-    '.controls .reply:hover':function(event){
-      this.src = '/images/reply_hover.png';
+    '.controls .reply:click':function(event){
+      $$('.publisher input')[0].value = "reply[" + $$('.tracker.active')[0].readAttribute('data-channel') + "][" + this.up('.message').readAttribute('data-mid') + "] ";
+      $$('.publisher input')[0].focus();
+    },
+    "#scroll_top:click":function(event){
+      $$('h1')[0].scrollTo();
     }
   });
                       
@@ -245,8 +257,10 @@ document.observe('dom:loaded', function(){
                                                               
 
 
-  }
-  
+  }    
+
+
+
 });
 
 

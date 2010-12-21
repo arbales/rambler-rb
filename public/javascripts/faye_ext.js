@@ -1,21 +1,39 @@
 // ### ClientAuth              
 //  An extension for subscription authentication.
-//  Uses a stored value from localStorage for the token  and username. 
+//  Uses a stored value from localStorage for the token  and username.  
+MessageIDHandler = {
+  incoming: function(message, callback){
+    if (message.id === undefined){
+      message.id = ABApp.generate_uuid();     
+      message.data._id = message.id;
+    }
+    callback(message);
+    
+  },
+  outgoing: function(message, callback){
+    if (message.id === undefined){
+      message.id = ABApp.generate_uuid();     
+    }
+    callback(message);
+  }
+}
 ClientAuth = {
 
   // Adds authentication information to outgoing subscription messages and calls a callback function to continue sending.
   outgoing: function(message, callback){
     if (message.channel == '/meta/subscribe'){
-      message.ext = {};
+      message.ext = {}; 
       message.ext.authToken = ABApp.sharedStorageManager().get('token');
       message.ext.authUser = ABApp.sharedStorageManager().get('username');
       message.ext.authUserID = ABApp.sharedStorageManager().get('userid');
-    }                      
+    }                 
     callback(message);
   },      
 
   // Inserts welcome notification into messages resulting from a subscription. 
-  incoming: function(message, callback){
+  incoming: function(message, callback){   
+    console.log(message);
+    
     if (message.username == undefined){
       message.username = 'rambo';
     }                                
@@ -47,7 +65,7 @@ ClientAuth = {
 
 var MentionHandler = {                      
   // Update the message count
-  incoming: function(message, callback){
+  incoming: function(message, callback){ 
     if (message.channel == ('/mentions/'+ABApp.sharedStorageManager().get('username')) && 
         message.data && 
         message.data.persists != 'false')
@@ -70,10 +88,24 @@ var GroupFilter = {
     var groups = [];
     if (message.data && message.data.text && message.data.text.scan(/\[(.*)\]/, function(match){
       groups.push(match);
-    }) && (groups.length > 0)){
-      console.log(groups[0][1]);
+    }) && (groups.length > 1)){  
       message.data.text = message.data.text.gsub(/\[(.*)\]/, "");
       message.channel = "/" + groups[0][1];
+    }
+    callback(message);
+  }
+}  
+
+var Threader = {
+  outgoing: function(message, callback){
+    var groups = [];
+    if (message.data && message.data.text && message.data.text.scan(/reply\[(.*)\]\[(.*)\]/, function(match){
+      groups.push(match);  
+    }) && (groups.length > 0)){
+      console.log(groups[0]);
+      message.data.text = message.data.text.gsub(/reply\[(.*)\]\[(.*)\]/, "");
+      message.channel = "/" + groups[0][1];
+      message.data.reply = groups[0][2];
     }
     callback(message);
   }

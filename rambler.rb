@@ -26,9 +26,6 @@ get '/' do
   haml :index         
 end     
 
-
-end
-
 post '/publish' do
   $faye.get_client.publish("/" + params[:channel], {
     'text'      => params[:text],
@@ -40,7 +37,11 @@ end
 get '/people' do
   @people = Person.all
   haml :people
-end   
+end 
+
+get '/people/destroy' do
+  Person.all.destroy_all
+end  
 
 load './posts.rb'
 load './channels.rb' 

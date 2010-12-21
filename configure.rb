@@ -1,5 +1,4 @@
 use OmniAuth::Builder do
-  provider :facebook, ENV['FB_APP_ID'], ENV['FB_APP_KEY'], scope: 'email,offline_access'
 end
 
 configure do
