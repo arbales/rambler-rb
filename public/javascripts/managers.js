@@ -1,556 +1,412 @@
-// ## StorageManager              
-// Aids in interacting with the HTML5 localStorage API.
-def ('StorageManager')({
-                           
-  init: function(){},   
-  //  Returns the data associated with a key or `false` of no data exists.
-  get: function(key){
-	  var data = localStorage.getItem(key);
-		if (data == "" || data == null){
-			return false;
-		} else {
-			return data;
-		}
-  }, 
-  // Sets data to a key in localStorage or overwrites it if it exists. Returns the set value to act chainable.
-  set: function(key, value){
-    localStorage.setItem(key, value);
-    return value; // Look how easily that chains...
-  },
-  unset: function(key){
-    localStorage.removeItem(key);
-    return null;
-  }
-});  
-    
-// ## SubscriptionWaker
-// Recalls channels from values persisted in localStorage and creates managers and elements.
-
-SubscriptionWaker = function(){
-  var memory = ABApp.sharedStorageManager().get('channels:remembered');
-  if (memory){
-    var mem_a = memory.split(",");
-    mem_a.each(function(s){
-      ABApp.channels[s] = new SubscriptionManager([s]).createTracker().createStreamContainer().pull();
-    });
-  }
-  
-  var smemory = ABApp.sharedStorageManager().get('sidebars:remembered');
-  if (smemory){
-    var mem_b = smemory.split(",");
-    mem_b.each(function(d){
-      ABApp.channels[d] = new SidebarManager([d]).createTracker().createStreamContainer().pull();
-    });
-  }
-}
-
-// ## SubscriptionManager
-//  Provides easy access to subscriptions and a facility for the storage and execution of callbacks.
-
-def ("SubscriptionManager")({
-  // * channels: an _Array_ of channel names without the initial slashes.
-  // * element (optional): an _Element_ for the messages to be inserted into.
-  init: function(channels, element, force){
-    if (ABApp.channels[channels[0]] != undefined){
-      new EUMessage("You've already joined this channel.", "You can view it by clicking the appropriate tab on your ramblobar.");
-    }
-    var self = this; // Shouldn't I just bind functions to the contexts I'm working with :)
-    self.hooks = {};
-    self.last_xhr_timestamp = false;
-    self.element = element || null;
-    if (self.element){
-      self.element.writeAttribute('data-channel', channels[0]);
-    }
-    self.channels = channels;
-    self.subscriptions = self.channels.collect(function(channel){
-      return ABApp.stream.client.subscribe("/"+channel, function(message){self.receive(message);});
-    });
-    return this;
-  },  
-  forget: function(){
-    var memory = ABApp.sharedStorageManager().get('channels:remembered');
-    if (memory){
-      var mem_a = memory.split(",").without(this.channels[0]);
-      ABApp.sharedStorageManager().set('channels:remembered', mem_a.join(","));
-    }
-    return this;
-  },
-  remember: function(){
-    var memory = ABApp.sharedStorageManager().get('channels:remembered');
-    if (memory){
-      var mem_a = memory.split(",");
-      if (!mem_a.include(this.channels[0])){
-        mem_a.push(this.channels[0]);
+(function() {
+  var root;
+  var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+  root = typeof exports != "undefined" && exports !== null ? exports : this;
+  root.StorageManager = function() {
+    function StorageManager(args) {}
+    StorageManager.prototype.get = function(key) {
+      var data;
+      data = localStorage.getItem(key);
+      if ((data != null) && data !== "") {
+        return data;
+      } else {
+        return false;
       }
-      ABApp.sharedStorageManager().set('channels:remembered', mem_a.join(","));
-    }else{
-      var string = this.channels.join(",")
-      ABApp.sharedStorageManager().set('channels:remembered', string);
+    };
+    StorageManager.prototype.set = function(key, value) {
+      localStorage.SetItem(key, value);
+      return value;
+    };
+    StorageManager.prototype.unset = function(key) {
+      localStorage.removeItem(key);
+      return null;
+    };
+    return StorageManager;
+  }();
+  root.SubscriptionWaker = function() {
+    var memory, sub, _i, _len;
+    memory = ABApp.sharedStorageManager().get('channels:remembered');
+    if (memory != null) {
+      for (_i = 0, _len = memory.length; _i < _len; _i++) {
+        sub = memory[_i];
+        ABApp.channels[sub] = new SubscriptionManager([s]).createTracker().createStreamContainer().pull;
+      }
     }
-    return this;
-  },   
-  swapStreamContainers: function(subs){   
-		var old_el = this.element;
-		old_el.removeAttribute('data-channel');
-		old_el.writeAttribute('data-channel', subs.channels[0]);
-		this.element = subs.element;           
-		this.element.removeAttribute('data-channel');
-		this.element.writeAttribute('data-channel', this.channels[0]);
-		subs.element = old_el;
-		
-		var subs_ems = this.element.innerHTML;
-		var my_ems = subs.element.innerHTML;        
-		
-		this.element.update(my_ems);
-		subs.element.update(subs_ems);
-/*		subs.element.insert({top:subs_ems}); */
-    return this;
-	},                                                                        
-	setStreamContainer: function(element){  
-		if (this.element != undefined){
-			var content = this.element.innerHTML;
-		}else{var content = false;}
-		this.element = element;
-		this.element.writeAttribute('data-channel', this.channels[0]);
-/*		this.element.select("p:not(.command)").invoke('remove').invoke(); */
-		if (content){this.element.update(content);}
-		return this;
-	},
-  // Creates an `Element` from a template and readys it for use with a stream. 
-  createStreamContainer: function(options){
-    var data = {}; 
-		if (this.element != undefined){
-			data.contents = this.element.innerHTML;
-		}
-    data.channel = this.channels[0];
-    this.element = EUTemplateWaker.wake('stream_container', data);
-    return this;
-  },
-  showStreamContainer: function(button){
-    if (button === undefined){
-      var button = this.tracker;
-    }
-    $$('.popup_stream').without(this.element).invoke('hide');
-    $$('li.tracker').without(button).invoke('removeClassName','active');
-      this.element.addClassName("grid_12");
-    
-    // Updates visual states.  
-    if (button.hasClassName('active')){
-			button.removeClassName('active');
-			button.down('.count').update("0").removeClassName("new");
-			}
-    else{    
-			button.down('.count').update("0").removeClassName("new");
-			button.addClassName('active');
-		}
-    
-    this.element.toggle(); 
-    return this;
-  },
-  // Add a function to `SubscriptionManager` to call at a given point. 
-  // Hooks include:
-  // * `pullComplete` called after a `pull` operation is completed. 
-  // * `pullSuccess` called after a _successful_ `pull` operation.
-  // * `pullBegin` called when a `pull` begins.
-  // * `pulledContent` after a `pull` has updated content. 
-  addHook: function(name, fun){
-    this.hooks[name] = fun;
-    return this;
-  },
-  getHook: function(name){
-    return ((this.hooks[name]) ? this.hooks[name] : function(){});
-  },
-  createTracker: function(){
-		var tracker = new Element("li").update(this.getName() + " <span class='count'>0</span>");
-		$$('.nav ul').first().insert(tracker);
-		this.registerTracker(tracker);
-		return this;
-  },
-  // Registers an element to track incoming messages.
-  // If the element has a `.count` child, it will be registered
-  // as the channel's counter.               
-  registerTracker: function(element){
-    this.tracker = element;
-    this.tracker.writeAttribute('data-channel', this.channels[0]);
-    if (this.tracker.down('.count')){
-      this.registerCounter(this.tracker.down('.count'));
-    }
-    if (!this.tracker.hasClassName('tracker')){
-      this.tracker.addClassName('tracker');
-    }
-    return this;
-  }, 
-  unregisterTracker: function(){
-		if (this.tracker != undefined){
-			this.tracker.removeAttribute('data-channel');
-			this.counter = false;
-			this.tracker.fade().remove();
-			this.tracker = false;			
-		}      
-		return this;
-	},            
-	unregisterStreamContainer: function(){
-		if (this.element != undefined){
-			this.element.removeAttribute('data-channel');
-			this.element.fade().remove();
-			this.element = false;
-		}   
-		return this;
-	},  
-	unregisterElements: function(){
-		return this.unregisterTracker().unregisterStreamContainer();
-	},
-  registerCounter: function(element){
-    this.counter = element;
-    return this;
-  },  
-  updateCounter: function(value){
-    var counter = this.getCounter();
-    if (counter){
-      counter.update(value);
-    }
-    return this;
-  },
-  getCounter: function(){
-    if (this.counter != undefined){
-      return this.counter;
-    }else{
-      return false;
-    }
-  },
-  incrementCounter: function(){
-    var counter = this.getCounter();
-    if (counter){
-      var count = parseInt(counter.innerHTML) || 0;
-      count++;
-      counter.update(count);
-    }
-    return this;
-  },
-  highlightCounter: function(){
-    var counter;
-    if (counter = this.getCounter()){
-      counter.addClassName('new');
-    }
-    return this;
-  },
-  // Uses XHR to pull messages from the server, optionally updating the counter and stream element if they exist.
-  pull: function(options){
-    var _onComplete = this.hooks['pullComplete'] || function(transport){};
-    var _onSuccess = this.hooks['pullSuccess'] || function(transport){};
-    var _onBegin = this.hooks['pullBegin'] || function(transport){};
-    var _onContentInserted = this.hooks['pulledContent'] || function(transport){};
-    
-    var date = ABApp.sharedStorageManager().get('channel:'+this.channels[0].sub("/","_",5)+':pull');
-    
-    var self = this;
-
-    this.getHook('pullBegin').bind(this)();
-    
-    new Ajax.Request("/archive/"+self.channels[0], {
-      method: 'get',
-      // If date != false, the server will return only the posts created
-      // since the date — if there are none, the server will fall back 
-      // to pagination and return the first set of posts. 
-      parameters: { since: date,
-                    before: self.last_xhr_timestamp,
-                    api_user_id: ABApp.sharedStorageManager().get('userid'),
-                    api_user_key: ABApp.sharedStorageManager().get('token')
-                  },
-      onSuccess: function(transport){
-        var data = transport.responseText.evalJSON().reverse();
-        if (data.size() == 0){
-          self.element.down('.command .pull').update('No more messages&hellip;').removeClassName("pull").addClassName("inactive");
+    return true;
+  };
+  root.SubscriptionManager = function() {
+    function SubscriptionManager(channels, element, force) {
+      var channel, _fn, _i, _len, _ref, _results;
+      this.channels = channels;
+      this.element = element;
+      if (ABApp.channels[channels[0]] == null) {
+        false;
+      }
+      this.hooks = {};
+      this.last_xhr_timestamp = false;
+      if (this.element != null) {
+        this.element.writeAttrbiute('data-channel', channels[0]);
+      }
+      this.subscriptions = function() {
+        _ref = this.channels;
+        _fn = function(channel) {
+          return _results.push(ABApp.stream.client.subscribe("/" + channel, function(message) {
+            return this.receive(message);
+          }));
+        };
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          channel = _ref[_i];
+          _fn(channel);
         }
-        
-        // If this manager hasn't performed an XHR pull before, then
-        // it will just receive the posts like normal, and note the timestamp
-        // of the earliest post it got.
-        if (self.last_xhr_timestamp == false){ 
-          self.last_xhr_timestamp = data[0].created_at;
-          data.each(function(message){
-            self.receive(message);
-          });
-        // If the manager _has_ done an XHR pull then it will receive the posts
-        // alerting the user, and insert them at the bottom of the streamContainer.
-        // This should be methodized.
-        }else{
-          data.each(function(message){ 
-            
-            self.last_xhr_timestamp = message.created_at;
-            self.receive_backwards(message);
-          });
+        return _results;
+      }.call(this);
+      this;
+    }
+    SubscriptionManager.prototype.forget = function() {
+      var memory;
+      memory = ABApp.sharedStorageManager().get('channels:remembered');
+      if (memory != null) {
+        ABApp.sharedStorageManager.set('channels:remembered', memory.split(",").without(this.channels[0]).join(','));
+      }
+      return this;
+    };
+    SubscriptionManager.prototype.remember = function() {
+      var memory;
+      memory = ABApp.sharedStorageManager().get('channels:remembered');
+      if (memory != null) {
+        memory = memory.split(',');
+        if (!memory.include(this.channels[0])) {
+          ABApp.sharedStorageManager().set('channels:remembered', memory.push(this.channels[0]).join(','));
         }
-        
-        var ndate = new Date();
-        ABApp.sharedStorageManager().set('channel:'+self.channels[0].sub("/","_",5)+':pull', ndate.toString());
-        
-        if (data.size() > 0){
-          _onContentInserted.bind(this)();
-        }
-        this.getHook('pulledContent').bind(this, transport)();
-      },
-      on403: function(transport){ 
-        this.subscription.cancel();
-        this.unregisterElements();
-      },
-      on500: this.getHook('pull500').bind(this),
-      onComplete: this.getHook('pullComplete').bind(this)
-    });
-    return this;
-  }, 
-  // Stop receiving messages on this channel.
-  cancel: function(){
-    this.forget();
-    this.unregisterElements();
-    new ABMessage('You&rsquo;ve left ' + this.channels[0] + '.');
-    this.subscription.cancel();
-  },
-  getUsername: function(){return ABApp.sharedStorageManager().get('username');},
-  // Receive a message on this subscription and insert it into an element as a `p` tag. If no element was provided
-  // log the message.
-  // *TODO* persist undisplayed messages in localStorage for later display.
-  receive: function(message){   
-    var date = ABApp.sharedStorageManager().get('channel:'+this.channels[0].sub("/","_",5)+':pull');
-       
-    if (this.element){
-      var el = new Element("div");
-      el.addClassName('message');
-      
-      el.writeAttribute('data-mid', ((message._id != undefined) ? message._id : message.id));
-      if (message.created_at == undefined){
-        if (message.persists == 'false'){el.addClassName("persists-false");}
-        if (message.invitation != undefined){
-          el.addClassName('invitation');
-          el.writeAttribute('data-channel', message.invitation);
-        }
-        if (message.username != this.getUsername()){
-          this.highlightCounter();
-          this.incrementCounter();          
-        }
-      }else{
-        var created = ISODate.convert(message.created_at);
-        var old_date = new Date(date);
-        if(created>old_date){
-          if (message.username != this.getUsername()){
-            this.highlightCounter();
-            this.incrementCounter();
+      } else {
+        ABApp.sharedStorageManager().set('channels:remembered', this.channels.join(','));
+      }
+      return this;
+    };
+    SubscriptionManager.prototype.swapStreamContainers = function(subs) {};
+    SubscriptionManager.prototype.setStreamContainer = function(element) {
+      var content;
+      content = this.element ? this.element.innerHTML : false;
+      this.element || (this.element = element);
+      this.element.writeAttribute('data-channel', this.channels[0]);
+      if (content != null) {
+        this.element.update(content);
+      }
+      return this;
+    };
+    SubscriptionManager.prototype.createStreamContainer = function(options) {
+      var data;
+      data = {};
+      if (this.element != null) {
+        data.contents = this.element.innerHTML;
+      }
+      data.channel = this.channels[0];
+      this.element = EUTemplateWaker.wake('stream_container', data);
+      return this;
+    };
+    SubscriptionManager.prototype.showStreamContainer = function(sender) {
+      sender || (sender = this.tracker);
+      $$('.popup_stream').without(this.element).invoke('hide');
+      $$('li.tracker').without(sender).invoke('removeClassName', 'active');
+      button.toggleClassName('active');
+      button.down('count').update('').removeClassName('new');
+      return this;
+    };
+    SubscriptionManager.prototype.addHook = function(name, callback) {
+      this.hooks[name] = callback;
+      return this;
+    };
+    SubscriptionManager.prototype.getHook = function(name) {
+      var _base;
+      if (typeof (_base = this.hooks)[name] === "function" ? _base[name](this.hooks[name]) : void 0) {
+        ;
+      } else {
+        return function() {};
+      }
+    };
+    SubscriptionManager.prototype.createTracker = function() {
+      var tracker;
+      tracker = new Element('li').update(this.getName() + " <span class='count'></span>");
+      $$('.nav ul').first().insert(tracker);
+      this.registerTracker(tracker);
+      return this;
+    };
+    SubscriptionManager.prototype.registerTracker = function(element) {
+      this.tracker = element;
+      this.tracker.writeAttribute('data-channel', this.channels[0]);
+      if (this.tracker.down('.count')) {
+        this.registerTracker(this.tracker.down('.count'));
+      }
+      if (this.tracker.hasClassName('tracker')) {
+        this.tracker.addClassName('tracker');
+      }
+      return this;
+    };
+    SubscriptionManager.prototype.unregisterTracker = function() {
+      if (this.tracker) {
+        this.tracker.removeAttribute('data-channel');
+        this.counter = void 0;
+        this.tracker.fade().remove();
+        this.tracker = void 0;
+      }
+      return this;
+    };
+    SubscriptionManager.prototype.unregisterStreamContainer = function() {
+      if (this.element) {
+        this.element.removeAttribute('data-channel');
+        this.element.fade().remove();
+        this.element = void 0;
+      }
+      return this;
+    };
+    SubscriptionManager.prototype.unregisterElements = function() {
+      return this.unregisterTracker().unregisterStreamContainer();
+    };
+    SubscriptionManager.prototype.registerCounter = function(counter) {
+      this.counter = counter;
+      return this;
+    };
+    SubscriptionManager.prototype.updateCounter = function(value) {
+      if (this.counter != null) {
+        this.counter.update(value);
+      }
+      return this;
+    };
+    SubscriptionManager.prototype.getCounter = function() {
+      if (this.counter != null) {
+        return this.counter;
+      } else {
+        return false;
+      }
+    };
+    SubscriptionManager.prototype.incrementCounter = function() {
+      var count;
+      if (this.counter != null) {
+        count = parseInt(counter.innerHTML) || 0;
+        count++;
+        this.counter.update(count);
+      }
+      return this;
+    };
+    SubscriptionManager.prototype.highlightCounter = function() {
+      if (this.counter != null) {
+        this.counter.addClassName('new');
+      }
+      return this;
+    };
+    SubscriptionManager.prototype.pull = function(options) {
+      var date;
+      date = ABApp.sharedStorageManager.get("channel:" + (this.channels[0].sub('/', '_', 5)) + ":pull");
+      this.getHook('pullBegin').bind(this)();
+      new Ajax.Request("/archive/" + this.channels[0], {
+        method: 'get',
+        parameters: {
+          since: date,
+          before: this.last_xhr_timestamp,
+          api_user_id: ABApp.sharedStorageManager().get('userid'),
+          api_user_key: ABApp.sharedStorageManager().get('token')
+        },
+        onSuccess: __bind(function(transport) {
+          var data, ndate;
+          data = transport.responseText.evalJSON().reverse();
+          if (data.size() === 0) {
+            this.element.down('.command .pull').update('No more messages.').removeClassName('pull').addClassName('inactive');
+          }
+          if (!this.last_xhr_timestamp) {
+            this.last_xhr_timestamp = data[0].created_at;
+            data.each(__bind(function(message) {
+              return this.receive(message);
+            }, this));
+          } else {
+            data.each(__bind(function(message) {
+              this.last_xhr_timestamp = message.created_at;
+              return this.receive_backwards(message);
+            }, this));
+          }
+          ndate = new Date();
+          ABApp.sharedStorageManager().set("channel:" + (self.channels[0].sub('/', '_', 5)) + ":pull", ndate.toString());
+          if (data.size() > 0) {
+            this.getHook('onContentInserted').bind(this, transport)();
+          }
+          return this.getHook('pulledContent').bind(this, transport)();
+        }, this),
+        on403: __bind(function(transport) {
+          this.subscriptions.invoke('cancel');
+          return this.unregisterElements();
+        }, this),
+        on500: this.getHook('pull500').bind(this),
+        onComplete: this.getHook('pullComplete').bind(this)
+      });
+      return this;
+    };
+    SubscriptionManager.prototype.cancel = function() {
+      this.forget();
+      this.unregisterElements();
+      new ABMessage("You&rsquo;ve left " + this.channels[0] + ".");
+      return this.subscriptions.invoke('cancel');
+    };
+    SubscriptionManager.prototype.getUsername = function() {
+      return ABApp.sharedStorageManager().get('username');
+    };
+    SubscriptionManager.prototype.receive = function(message, options) {
+      var counter, created, date, el, formatted_date, old_date, opts, p;
+      options || (options = {});
+      date = ABApp.sharedStorageManager().get("channel:" + (this.channels[0].sub('/', '_', 5)) + ":pull");
+      if (this.element != null) {
+        el = new Element('div').addClassName('message').writeAttribute((message._id != null ? message._id : message.id));
+        if (message.created_at != null) {
+          if (message.persists === !"false") {
+            el.addClassName('persists-false');
+          }
+          if (message.invitation != null) {
+            el.addClassName('invitation');
+            el.writeAttribute('data-channel', message.invitation);
+          }
+          if (message.username === !this.getUsername) {
+            this.highlightCounter;
+            this.incrementCounter;
+          }
+        } else {
+          created = ISODate.convert(message.created_at);
+          old_date = new Date(date);
+          if (created > old_date && message.username === !this.getUsername) {
+            this.highlightCounter;
+            this.incrementCounter;
           }
         }
-      }
-      
-      el.update("<ul class='meta'><li class='user'>" + message.username + "</li><li class='timestamp'>"+((message.created_at != undefined) ? ISODate.convert(message.created_at).strftime("%l:%M%P") : "")+"</li></ul><p class='text'>" + message.text+"</p><p class='controls'><input type='image' src='/images/reply.png' class='reply'/><span class='count'></span></p>").hide();
-      if (message.reply){
-       var p = $$("div[data-mid='"+message.reply+"']")[0];
-       if (p != undefined){
-         p.insert({after:el.addClassName('reply').appear({engine:'javascript'})});
-         p.addClassName('has_replies')
-         var counter = p.down('.count');
-         var count = parseInt(counter.innerHTML) || 0;
-         count++;
-         counter.update(count);
-       }
-      }else{
-        this.element.insert({top: el.appear({engine:'javascript'})});      
-      }
-             
-        
-      Event.addBehavior.reload.defer(); 
-    } else{
-      /*console.log("Unrouted Message:" + message.text);*/
-    }
-  },               
-  receive_backwards: function(message){         
-    if (this.element){
-      var el = new Element("p");   
-      el.writeAttribute('data-mid', ((message._id != undefined) ? message._id : message.id));
-      if (message.created_at == undefined){
-        if (message.persists == 'false'){
-          el.addClassName("persists-false");
-        }
-        if (message.invitation != undefined){
-          el.addClassName('invitation');
-          el.writeAttribute('data-channel', message.invitation);
-        }
-        if (message.username != this.getUsername()){
-          this.highlightCounter();
-          this.incrementCounter();
-        }else{
+        formatted_date = message.created_at != null ? ISODate.convert(message.created_at).strftime("%l:%M%P") : "";
+        el.update("<ul class='meta'>\n  <li class='user'>" + message.username + "</li>\n  <li class='timestamp'>" + formatted_date + "</li>\n</ul>\n<p class='text'>" + message.text + "</p>\n<p class='controls'>\n  <input type='image' src='/images/reply.png' class='reply'/>          \n  <span class='count'></span></p>").hide();
+        if (message.reply != null) {
+          p = $$("div[data-mid='" + message.reply + "']");
+          if (p != null) {
+            p.insert({
+              after: el.addClassName('reply').appear({
+                engine: 'javascript'
+              })
+            }).addClassName('has_replies');
+            counter = p.down('.count');
+            counter.update((parseInt(counter.innerHTML) || 0) + 1);
+          } else {
+            opts = {};
+            opts[(options.backwards != null ? "bottom" : "top")] = el.appear({
+              engine: 'javascript'
+            });
+            this.element.insert(opts);
+          }
+          Event.addBehavior.reload.defer();
         }
       }
-      el.update("<ul class='meta'><li class='user'>" + message.username + "</li><li class='timestamp'>"+((message.created_at != undefined) ? ISODate.convert(message.created_at).strftime("%I:%M%P") : "")+"</li></ul><p class='text'>" + message.text+"</p><p class='controls'><input type='image' src='/images/reply.png' class='reply'/><span class='count'></span></p>").hide();
-      if (message.reply){
-       var p = $$("div[data-mid='"+message.reply+"']")[0].insert({after:el.addClassName('reply').appear()});
-       p.addClassName('has_replies')
-       var counter = p.down('.count');
-       var count = parseInt(counter.innerHTML) || 0;
-       count++;
-       counter.update(count);
-      }else{
-        this.element.insert({buttom: el.appear()});      
+      return this;
+    };
+    SubscriptionManager.prototype.receive_backwards = function(message) {
+      return this.receive(message, {
+        backwards: true
+      });
+    };
+    SubscriptionManager.prototype.send = function(message) {
+      return ABApp.stradm.client.publish("/" + this.channels[0], {
+        text: message,
+        username: this.getUsername
+      });
+    };
+    SubscriptionManager.prototype.aka = function(alias) {
+      this.alias = alias;
+      return this;
+    };
+    SubscriptionManager.prototype.getName = function() {
+      if (this.alias != null) {
+        return this.alias;
+      } else {
+        return this.channels[0];
       }
-        
-      Event.addBehavior.reload.defer(); 
-    } else{
-      /*console.log("Unrouted Message:" + message.text);*/
-    }
-  },  
-  // Send text to the server for publishing.
-  send: function(send_text){
-    ABApp.stream.client.publish("/"+this.channels[0], {text: send_text, username: this.getUsername()});
-  },   
-	aka: function(name){ 
-		this.alias = name;
-	 	return this;
-	},
-	getName: function(){
-		if (this.alias != undefined){
-			return this.alias;
-		}else{
-			return this.channels[0];
-		}
-	},	
-  addBehavior: function(name){
-	  if (ABApp.behaviors['SubscriptionManager#'+name]){
-			behavior = ABApp.behaviors['SubscriptionManager#'+name]
-			return behavior.bind(this)();
- 		}else{         
-			throw("SubscriptionManager#addBehavior("+name+") that behavior is not available.");
-			return false;
-		}
-	}
-});   
+    };
+    SubscriptionManager.prototype.addBehavior = function(behavior) {
+      if (ABApp.behaviors["SubscriptionManager#" + name] != null) {
+        behavior = ABApp.behaviors["SubscriptionManager#" + name].bind(this)();
+        this;
+      } else {
 
-def ("SidebarManager") << SubscriptionManager ({
-  createTracker: function(){
-		var tracker = new Element("li").update(this.getName() + " <span class='count'>0</span>");
-		$$('.sidebars ul').first().insert(tracker);
-		this.registerTracker(tracker);
-		return this;
-  },
-  showStreamContainer: function(button){
-    $$('.popup_stream').without(this.element).invoke('hide');
-    $$('li.tracker').without(button).invoke('removeClassName','active');
-    // Clones the position of the tracker onto the stream container.
-    Element.clonePosition(this.element, button, {
-      setWidth:false,
-      setHeight:false,
-      offsetTop: -4,
-      offsetLeft: -600});
-    
-    // Updates visual states.  
-    if (button.hasClassName('active')){
-			button.removeClassName('active');
-			button.down('.count').update("0").removeClassName("new");
-			}
-    else{    
-			button.down('.count').update("0").removeClassName("new");
-			button.addClassName('active');
-		}
-    
-    this.element.toggle();
-  },
-  forget: function(){
-    var memory = ABApp.sharedStorageManager().get('sidebars:remembered');
-    if (memory){
-      var mem_a = memory.split(",").without(this.channels[0]);
-      ABApp.sharedStorageManager().set('sidebars:remembered', mem_a.join(","));
-    }
-    return this;
-  },
-  remember: function(){
-    var memory = ABApp.sharedStorageManager().get('sidebars:remembered');
-    if (memory){
-      var mem_a = memory.split(",");
-      if (!mem_a.include(this.channels[0])){
-        mem_a.push(this.channels[0]);
       }
-      ABApp.sharedStorageManager().set('sidebars:remembered', mem_a.join(","));
-    }else{
-      var string = this.channels.join(",")
-      ABApp.sharedStorageManager().set('sidebars:remembered', string);
+      throw "SubscriptionManager#addBehavior(" + behavior + ") that behavior is not available.";
+      return false;
+    };
+    return SubscriptionManager;
+  }();
+  root.FragmentManager = function() {
+    function FragmentManager(lurl, defaults, callback) {
+      var _ref;
+      this.callback = callback;
+      this._checker = __bind(this._checker, this);;
+      if ((_ref = location.hash) === "" || _ref === "#") {
+        this.value = window.location.hash;
+      }
+      this.template = new Template(lurl);
+      this.parts = $H(defaults);
+      if (typeof this.callback !== 'function') {
+        this.callback = (function() {
+          return this;
+        });
+      }
+      this.setupChecker();
     }
-    return this;
-  },
-});
-
-
-// ## FragmentManager
-// Helps manage url fragments for applications using client-side views.
-def("FragmentManager")({
-	init: function(lurl, defaults, callback){ 
-		if (location.hash == "" || location.hash == "#"){
-			this.value = window.location.hash;			
-		} else {
-			/*this.value = window.location.hash.substring(1);*/
-		}
-		this.template = new Template(lurl);
-		this.parts = $H(defaults);           
-		if (typeof(callback) === 'function'){
-			this.callback = callback;
-		}else{
-			this.callback = function(){return this;}
-		}
-		
-		return this.setupChecker();
-	},   
-	setupChecker: function(){
-		this.checker = new PeriodicalExecuter(this._checker.bind(this), 0.5);
-		return this;
-	},
-	_checker: function(){
-		if (location.hash != "#"+this.value && location.hash != this.value){
-    	console.log(window.location.hash + " vs. " + this.value);
-			this.checker.stop();
-			this.updateHash().callback().setupChecker();
-		}
-	},
-	set: function(key, value){
-		this.parts.set(key, value);
-		
-		return this;
-	},
-	updateHash: function(){  
-		if (this.value != undefined){
-			window.location.hash = this.value;			
-		}else{
-			this.value = window.location.hash.substring(1);
-		}
-		return this;
-	},
-	update: function(value){
-		this.value = value;   
-		return this;
-	},
-	render: function(){
-		this.update(this.template.evaluate(this.parts.toTemplateReplacements()));
-		return this;
-	}
-});
-         
-// ## WindowManager
-// Manages a collection of _EUWindow_ instances and controls their z-order.
-def("WindowManager")({
-  init: function(){      
-    this.pool = $H(); 
-    this.EUWMProxyCount = 100;
-    
-    if (!$('app_element')){
-			this.element = new Element('div', {"id":"app_element"});
-			document.body.appendChild(this.element)
-		}else{
-			this.element = $('app_element');
-		}
-  },
-  // Add a window to the pool.
-  add: function(instance){
-    var key = ABApp.generate_uuid();
-    this.pool.set(key, instance);      
-    
-    instance.element.writeAttribute('data-eid', key);
-  },                              
-  recall: function(element){
-    var id = element.readAttribute('data-eid');
-    return this.pool.get(id);
-  }
-});
+    FragmentManager.prototype.setupChecker = function() {
+      this.checker = new PeriodicalExecuter(this._checker, 0.5);
+      return this;
+    };
+    FragmentManager.prototype._checker = function() {
+      var _ref;
+      if ((_ref = location.hash) !== ("#" + this.value) && _ref !== this.value) {
+        this.stop();
+        return this.updateHash().callback().setupChecker();
+      }
+    };
+    FragmentManager.prototype.set = function(key, value) {
+      this.parts.set(key, value);
+      return this;
+    };
+    FragmentManager.prototype.updateHash = function() {
+      if (this.value != null) {
+        window.location.hash = this.value;
+      } else {
+        this.value = window.location.hash.substring(1);
+      }
+      return this;
+    };
+    FragmentManager.prototype.update = function(value) {
+      this.value = value;
+      return this;
+    };
+    FragmentManager.prototype.render = function() {
+      this.update(this.template.evaluate(this.parts.toTemplateReplacements()));
+      return this;
+    };
+    return FragmentManager;
+  }();
+  root.WindowManager = function() {
+    function WindowManager() {
+      this.pool = $H();
+      this.EUWMProxyCount = 100;
+      if (!$('app_element')) {
+        this.element = new Element('div', {
+          'id': 'app_element'
+        });
+        document.body.appendChild(this.element);
+      } else {
+        this.element = $('app_element');
+      }
+    }
+    WindowManager.prototype.add = function(instance) {
+      var key;
+      key = ABApp.generate_uuid();
+      this.pool.set(key, instance);
+      return instance.element.writeAttribute('data-eid', key);
+    };
+    WindowManager.prototype.recall = function(element) {
+      var id;
+      id = element.readAttribute('data-eid');
+      return this.pool.get(id);
+    };
+    return WindowManager;
+  }();
+}).call(this);
