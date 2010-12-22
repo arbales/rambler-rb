@@ -320,13 +320,14 @@ def ("SubscriptionManager")({
       
       el.writeAttribute('data-mid', ((message._id != undefined) ? message._id : message.id));
       if (message.created_at == undefined){
-        if (message.persists == 'false'){el.addClassName("persists-false");}else{this.incrementCounter()}
+        if (message.persists == 'false'){el.addClassName("persists-false");}
         if (message.invitation != undefined){
           el.addClassName('invitation');
           el.writeAttribute('data-channel', message.invitation);
         }
         if (message.username != this.getUsername()){
           this.highlightCounter();
+          this.incrementCounter();          
         }
       }else{
         var created = ISODate.convert(message.created_at);
@@ -334,8 +335,8 @@ def ("SubscriptionManager")({
         if(created>old_date){
           if (message.username != this.getUsername()){
             this.highlightCounter();
+            this.incrementCounter();
           }
-          this.incrementCounter();
         }
       }
       
@@ -365,13 +366,17 @@ def ("SubscriptionManager")({
       var el = new Element("p");   
       el.writeAttribute('data-mid', ((message._id != undefined) ? message._id : message.id));
       if (message.created_at == undefined){
-        if (message.persists == 'false'){el.addClassName("persists-false");}else{this.incrementCounter()}
+        if (message.persists == 'false'){
+          el.addClassName("persists-false");
+        }
         if (message.invitation != undefined){
           el.addClassName('invitation');
           el.writeAttribute('data-channel', message.invitation);
         }
         if (message.username != this.getUsername()){
           this.highlightCounter();
+          this.incrementCounter();
+        }else{
         }
       }
       el.update("<ul class='meta'><li class='user'>" + message.username + "</li><li class='timestamp'>"+((message.created_at != undefined) ? ISODate.convert(message.created_at).strftime("%I:%M%P") : "")+"</li></ul><p class='text'>" + message.text+"</p><p class='controls'><input type='image' src='/images/reply.png' class='reply'/><span class='count'></span></p>").hide();
