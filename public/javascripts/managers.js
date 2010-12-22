@@ -22,9 +22,10 @@ def ('StorageManager')({
     return null;
   }
 });  
+    
+// ## SubscriptionWaker
+// Recalls channels from values persisted in localStorage and creates managers and elements.
 
-// ## SubscriptionManager
-//  Provides easy access to subscriptions and a facility for the storage and execution of callbacks.
 SubscriptionWaker = function(){
   var memory = ABApp.sharedStorageManager().get('channels:remembered');
   if (memory){
@@ -42,6 +43,9 @@ SubscriptionWaker = function(){
     });
   }
 }
+
+// ## SubscriptionManager
+//  Provides easy access to subscriptions and a facility for the storage and execution of callbacks.
 
 def ("SubscriptionManager")({
   // * channels: an _Array_ of channel names without the initial slashes.
@@ -148,7 +152,7 @@ def ("SubscriptionManager")({
     this.element.toggle(); 
     return this;
   },
-  // Add a function to `ubscriptionManager` to call at a given point. 
+  // Add a function to `SubscriptionManager` to call at a given point. 
   // Hooks include:
   // * `pullComplete` called after a `pull` operation is completed. 
   // * `pullSuccess` called after a _successful_ `pull` operation.
@@ -252,7 +256,7 @@ def ("SubscriptionManager")({
       method: 'get',
       // If date != false, the server will return only the posts created
       // since the date — if there are none, the server will fall back 
-      // to pagination and return the first 20 posts. 
+      // to pagination and return the first set of posts. 
       parameters: { since: date,
                     before: self.last_xhr_timestamp,
                     api_user_id: ABApp.sharedStorageManager().get('userid'),

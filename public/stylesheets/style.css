@@ -210,6 +210,7 @@ button, input[type=button], input[type=submit] {
 }
 
 #scroll_top {
+  z-index:900;
   position:fixed;
   bottom:50px;
   right:50px;
@@ -423,7 +424,7 @@ span.short_list {
       -webkit-transition:opacity .3s;
     }  
     .messages .message:hover .controls input{
-      opacity:1;
+      opacity:1.0;
     }
        
     .messages span.controls img{
