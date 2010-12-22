@@ -103,7 +103,7 @@ def ("SubscriptionManager")({
 		
 		this.element.update(my_ems);
 		subs.element.update(subs_ems);
-//		subs.element.insert({top:subs_ems});
+/*		subs.element.insert({top:subs_ems}); */
     return this;
 	},                                                                        
 	setStreamContainer: function(element){  
@@ -112,7 +112,7 @@ def ("SubscriptionManager")({
 		}else{var content = false;}
 		this.element = element;
 		this.element.writeAttribute('data-channel', this.channels[0]);
-//		this.element.select("p:not(.command)").invoke('remove').invoke();
+/*		this.element.select("p:not(.command)").invoke('remove').invoke(); */
 		if (content){this.element.update(content);}
 		return this;
 	},
@@ -132,12 +132,7 @@ def ("SubscriptionManager")({
     }
     $$('.popup_stream').without(this.element).invoke('hide');
     $$('li.tracker').without(button).invoke('removeClassName','active');
-    // Clones the position of the tracker onto the stream container.
-    /*Element.clonePosition(this.element, $('main_stream'), {
-        setHeight:false
-      }); */
       this.element.addClassName("grid_12");
-    //this.element.setStyle("height:600px;");
     
     // Updates visual states.  
     if (button.hasClassName('active')){
@@ -487,7 +482,7 @@ def("FragmentManager")({
 		if (location.hash == "" || location.hash == "#"){
 			this.value = window.location.hash;			
 		} else {
-			//this.value = window.location.hash.substring(1);
+			/*this.value = window.location.hash.substring(1);*/
 		}
 		this.template = new Template(lurl);
 		this.parts = $H(defaults);           
