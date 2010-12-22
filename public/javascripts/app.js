@@ -39,7 +39,7 @@ document.observe('dom:loaded', function(){
 	window.onscroll = ABMessageResizer;
                                           
   // Setup the Faye client.
-  ABApp.stream.client = new Faye.Client('http://rambler.pris.ma/faye');
+  ABApp.stream.client = new Faye.Client('http://bubbles.local:3000/faye');
   
   // Add extensions
   ABApp.stream.client.addExtension(MessageIDHandler);
@@ -102,7 +102,6 @@ document.observe('dom:loaded', function(){
       })
     }, 
     /*"form.publisher input[type=text]:keypress":function(event){
-	  	console.log(event.keyCode);
 		},*/
     // Save the auth token.
     // * To be replaced by actual login system.

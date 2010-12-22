@@ -32,7 +32,6 @@ ClientAuth = {
 
   // Inserts welcome notification into messages resulting from a subscription. 
   incoming: function(message, callback){   
-    console.log(message);
     
     if (message.username == undefined){
       message.username = 'rambo';
@@ -102,7 +101,6 @@ var Threader = {
     if (message.data && message.data.text && message.data.text.scan(/reply\[(.*)\]\[(.*)\]/, function(match){
       groups.push(match);  
     }) && (groups.length > 0)){
-      console.log(groups[0]);
       message.data.text = message.data.text.gsub(/reply\[(.*)\]\[(.*)\]/, "");
       message.channel = "/" + groups[0][1];
       message.data.reply = groups[0][2];
