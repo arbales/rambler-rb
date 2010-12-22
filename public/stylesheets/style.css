@@ -201,7 +201,10 @@ button, .button, input:not([type="image"]) {
 	
   font-family:'Helvetica Neue', Helvetica, Arial;
 }
-
+  
+input[type=text]:focus {
+  cursor:text;
+}
 button, input[type=button], input[type=submit] {
   font-size:14px;
 }
