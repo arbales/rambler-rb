@@ -1,8 +1,6 @@
-root = exports ? this
-
 # ## StorageManager              
 # Aids in interacting with the HTML5 localStorage API.
-class root.StorageManager
+class StorageManager
 
   ## Returns the data associated with a key or `false` of no data exists.
   constructor: (args) ->
@@ -20,7 +18,7 @@ class root.StorageManager
 
 # ## SubscriptionWaker
 # Recalls channels from values persisted in localStorage and creates managers and elements.
-root.SubscriptionWaker = ->
+SubscriptionWaker = ->
   memory = ABApp.sharedStorageManager().get 'channels:remembered'
   if memory?
     for sub in memory
@@ -32,7 +30,7 @@ root.SubscriptionWaker = ->
 
 # ## SubscriptionManager
 #  Provides easy access to subscriptions and a facility for the storage and execution of callbacks.
-class root.SubscriptionManager
+class SubscriptionManager
   # * channels: an _Array_ of channel names without the initial slashes.
   # * element (optional): an _Element_ for the messages to be inserted into.
   constructor: (@channels, @element, force) ->
@@ -279,7 +277,7 @@ class root.SubscriptionManager
 # ## FragmentManager
 # Helps manage url fragments for applications using client-side views.
 
-class root.FragmentManager
+class FragmentManager
 
   constructor: (lurl, defaults, @callback) ->
     if location.hash in ["", "#"]
@@ -313,7 +311,7 @@ class root.FragmentManager
              
 # ## WindowManager
 # Manages a collection of _EUWindow_ instances and controls their z-order.
-class root.WindowManager
+class WindowManager
 
   constructor: ->
     @pool = $H()
