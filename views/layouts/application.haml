@@ -6,7 +6,7 @@
       =javascript_include_tag 'deploy.js'
     - else
       =stylesheet_link_tag 'reset', 'grid', 'style'
-      = javascript_include_tag 'strftime', '/faye.js','faye_ext','def', 'sha1','prototype.s2.min','handlebars','templates','euwindow', 'abmessage', 'lowpro','managers','abapp','app'
+      = javascript_include_tag 'strftime', 'isodate', '/faye.js','/cafe/faye_ext','def', 'sha1','prototype.s2.min','handlebars','templates','euwindow', 'abmessage', 'lowpro','/cafe/managers','abapp','/cafe/app'
     - if @js  
       - @js.each do |js|
         :javascript

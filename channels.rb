@@ -28,10 +28,10 @@ end
 get '/archive/:channel' do
   # Add AUTH!
   
-  person = Person.criteria.id(params[:api_user_id]).limit(1)[0]
-  unless person && person.verify(params[:api_user_key])
-    error 403, "You aren't authorized to read this stream."
-  end
+  #person = Person.criteria.id(params[:api_user_id]).limit(1)[0]
+  #unless person && person.verify(params[:api_user_key])
+  #  error 403, "You aren't authorized to read this stream."
+  #end
   
   if params[:before] != 'false'
     mentions =  Post.where(:channel => "/#{params[:channel]}")
@@ -51,6 +51,7 @@ get '/archive/:channel' do
   end
   content_type :json
   mentions.to_json
+  #mentions.to_json
 end
 
 

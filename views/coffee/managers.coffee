@@ -7,10 +7,10 @@ class StorageManager
     # body...
   get: (key) ->
     data = localStorage.getItem key
-    if (data? && data != "") then data else false
+    if (data? && data != "") then data else null
   # Sets data to a key in localStorage or overwrites it if it exists. Returns the set value to act chainable.
   set: (key, value) ->
-    localStorage.SetItem(key,value)
+    localStorage.setItem(key,value)
     value
   unset: (key) ->
     localStorage.removeItem(key)
@@ -21,10 +21,10 @@ class StorageManager
 SubscriptionWaker = ->
   memory = ABApp.sharedStorageManager().get 'channels:remembered'
   if memory?
-    for sub in memory
-      ABApp.channels[sub] = new SubscriptionManager([s]).createTracker()
+    memory.split(',').each (s) ->
+      ABApp.channels[s] = new SubscriptionManager([s]).createTracker()
                                                         .createStreamContainer()
-                                                        .pull
+                                                        .pull()
                                                        
   true
 
@@ -41,7 +41,7 @@ class SubscriptionManager
     if @element?
       @element.writeAttrbiute('data-channel', channels[0])
     @subscriptions = for channel in @channels
-      ABApp.stream.client.subscribe("/#{channel}", (message)->
+      ABApp.stream.client.subscribe("/#{channel}", (message)=>
         @receive(message);
       )
     this
@@ -49,7 +49,7 @@ class SubscriptionManager
   forget: ->
     memory = ABApp.sharedStorageManager().get 'channels:remembered'
     if memory?
-      ABApp.sharedStorageManager.set('channels:remembered', memory.split(",").without(@channels[0]).join(','))
+      ABApp.sharedStorageManager().set('channels:remembered', memory.split(",").without(@channels[0]).join(','))
     this
   remember: ->
     memory = ABApp.sharedStorageManager().get 'channels:remembered'
@@ -76,13 +76,21 @@ class SubscriptionManager
     data.contents = @element.innerHTML if @element?
     data.channel = @channels[0]
     @element = EUTemplateWaker.wake 'stream_container', data
+    @element.addClassName("grid_12")
     this
-  showStreamContainer: (sender) ->
-    sender ||= this.tracker
+  showStreamContainer: (button) ->
+    if not button?
+      button = @tracker
     $$('.popup_stream').without(@element).invoke('hide')
-    $$('li.tracker').without(sender).invoke('removeClassName','active')    
-    button.toggleClassName('active')
-    button.down('count').update('').removeClassName('new')             
+    $$('li.tracker').without(button).invoke('removeClassName','active')    
+    
+    if button.hasClassName('active')
+      button.removeClassName('active')
+      #button.down('.count').update("0").removeClassName("new")
+    else
+      #button.down('.count').update("0").removeClassName("new")
+      button.addClassName("active")
+    this.element.toggle()
     this
   # Add a function to `SubscriptionManager` to call at a given point.
   # Hooks include:                                                       
@@ -94,9 +102,12 @@ class SubscriptionManager
     @hooks[name] = callback
     this
   getHook: (name) ->
-    if @hooks[name]? @hooks[name] else (->)
+    if @hooks[name]?
+      @hooks[name]
+    else
+      (->)
   createTracker: ->
-    tracker = new Element('li').update(this.getName() + " <span class='count'></span>")
+    tracker = new Element('li').update(this.getName() + " <span class='count'>0</span>")
     $$('.nav ul').first().insert(tracker)
     @registerTracker(tracker)
     this
@@ -107,8 +118,8 @@ class SubscriptionManager
     @tracker = element
     @tracker.writeAttribute('data-channel', @channels[0])
     if @tracker.down('.count')
-      this.registerTracker(@tracker.down('.count'))
-    if @tracker.hasClassName('tracker')
+      this.registerCounter(@tracker.down('.count'))
+    unless @tracker.hasClassName('tracker')
       @tracker.addClassName('tracker')
     this
   unregisterTracker: () ->
@@ -147,8 +158,8 @@ class SubscriptionManager
   
   # Uses XHR to pull messages from the server, optionally updating the counter and stream element if they exist.
   pull: (options) ->
-    date = ABApp.sharedStorageManager.get("channel:#{@channels[0].sub('/','_',5)}:pull")
-    this.getHook('pullBegin').bind(this)()
+    date = ABApp.sharedStorageManager().get("channel:#{@channels[0].sub('/','_',5)}:pull")
+    @getHook('pullBegin').bind(this)()
     
     new Ajax.Request("/archive/#{@channels[0]}", {
       method: 'get',
@@ -188,14 +199,15 @@ class SubscriptionManager
         ABApp.sharedStorageManager().set("channel:#{self.channels[0].sub('/','_',5)}:pull", ndate.toString());
 
         if data.size() > 0
-          @getHook('onContentInserted').bind(this, transport)();
+          @getHook('onContentInserted')(transport)
 
-        @getHook('pulledContent').bind(this,transport)();
+        @getHook('pulledContent')(transport);
       on403: (transport) =>
         @subscriptions.invoke('cancel')
         @unregisterElements()
-      on500: @getHook('pull500').bind(this)
-      onComplete: @getHook('pullComplete').bind(this)
+      on500: @getHook('pull500')
+      on0: @getHook('pull500')
+      onComplete: @getHook('pullComplete')
     })                                               
     this
   # Stop receiving messages on this channel. 
@@ -211,55 +223,49 @@ class SubscriptionManager
   receive: (message, options) ->
     options ||= {}
     date = ABApp.sharedStorageManager().get("channel:#{this.channels[0].sub('/','_',5)}:pull");
-       
-    if @element?
-      el = new Element('div').addClassName('message').writeAttribute((if message._id? then message._id else message.id))
-      if message.created_at?
-        if message.persists is not "false"
+    if @element?                                                                   
+      mid = if message._id? then message._id else message.id
+      el = new Element('div').addClassName('message').writeAttribute('data-mid',mid)
+      if not message.created_at?
+        if message.persists is "false"
           el.addClassName('persists-false')
-        if message.invitation?
+        if not message.invitation?
           el.addClassName('invitation')
           el.writeAttribute('data-channel', message.invitation)
         if message.username is not @getUsername
           @highlightCounter
           @incrementCounter
-      else
+      else       
         created = ISODate.convert message.created_at
         old_date = new Date(date)
         if created > old_date && message.username is not @getUsername
           @highlightCounter
           @incrementCounter 
       formatted_date = if message.created_at? then ISODate.convert(message.created_at).strftime("%l:%M%P") else ""
-      el.update("""
-      <ul class='meta'>
-        <li class='user'>#{message.username}</li>
-        <li class='timestamp'>#{formatted_date}</li>
-      </ul>
-      <p class='text'>#{message.text}</p>
-      <p class='controls'>
-        <input type='image' src='/images/reply.png' class='reply'/>          
-        <span class='count'></span></p>
-      """).hide()
+      el.update("<ul class='meta'><li class='user'>#{message.username}</li><li class='timestamp'>#{formatted_date}</li></ul><p class='text'>#{message.text}</p><p class='controls'><input type='image' src='/images/reply.png' class='reply'/>          <span class='count'>0</span></p>").hide()
       if message.reply?
-        p = $$("div[data-mid='#{message.reply}']")
+        p = $$("div[data-mid='#{message.reply}']")[0]
         if p?
           p.insert({after: el.addClassName('reply').appear({engine:'javascript'})})
-           .addClassName('has_replies')
+          p.addClassName('has_replies')
           counter = p.down('.count')
           counter.update((parseInt(counter.innerHTML) || 0) + 1)
-        else
-          opts = {}
-          opts[(if options.backwards? then "bottom" else "top")] = el.appear({engine:'javascript'})
-          @element.insert(opts)                                     
+      else
+        #if options.backwards? 
+        #  @element.insert({bottom:el.appear({engine:'javascript'})})  
+        #else
+          @element.insert({top:el.appear({engine:'javascript'})})  
+          
+                                           
         Event.addBehavior.reload.defer()
     this                                
   # Please use `#receive(message, {backwards: true})` instead
   receive_backwards: (message) ->
     @receive(message, {backwards: true})
   send: (message) ->
-    ABApp.stradm.client.publish("/#{@channels[0]}", {
+    ABApp.stream.client.publish("/#{@channels[0]}", {
       text: message,
-      username: @getUsername
+      username: @getUsername()
     })
   aka: (@alias) ->
     this
@@ -267,12 +273,11 @@ class SubscriptionManager
     if @alias? then @alias else @channels[0]
   # Redo this.
   addBehavior: (behavior) ->
-    if ABApp.behaviors["SubscriptionManager##{name}"]?
-      behavior = ABApp.behaviors["SubscriptionManager##{name}"].bind(this)()
-      this
+    if ABApp.behaviors["SubscriptionManager##{behavior}"]?
+      ABApp.behaviors["SubscriptionManager##{behavior}"](this)
     else
-		  throw("SubscriptionManager#addBehavior(#{behavior}) that behavior is not available.");
-		  false
+		  #throw("SubscriptionManager#addBehavior(#{behavior}) that behavior is not available.");
+		  this
  
 # ## FragmentManager
 # Helps manage url fragments for applications using client-side views.
@@ -328,4 +333,3 @@ class WindowManager
   recall: (element) ->
     id = element.readAttribute('data-eid')
     this.pool.get(id)
-  

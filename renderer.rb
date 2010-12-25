@@ -194,4 +194,4 @@ module Padrino
         end
     end # InstanceMethods
   end # Rendering
-end # Padrino
+end # Padrin

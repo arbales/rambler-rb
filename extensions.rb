@@ -70,13 +70,12 @@ class Archiver
     end
     
     begin   
-      
       if ((message['data']['text'] && message['data']['username'] && message['channel'] && message['data']['persists'] != 'false') rescue false)
-        
         tokens = message['data']['text'].split(" ")        
         message['data']['_id'] = message['id']
         
         if(!(message['channel'].start_with?("/mentions")))
+          puts "Block 1"
           post = Post.new(:_id => message['id'],
                       :text => message['data']['text'],
                       :channel => message['channel'],
@@ -89,7 +88,7 @@ class Archiver
         
         
         if (tokens[0].start_with?("@") && !(message['channel'].start_with?("/mentions")))
-          
+          puts "Block 2"
           post = Post.create(:_id => message['id'],
                       :text => message['data']['text'],
                       :channel => "/mentions/#{tokens[0].sub('@', '')}",
@@ -99,6 +98,14 @@ class Archiver
             'text'      => message['data']['text'],
             'username' => message['data']['username']
           })
+        end
+        
+        if (message['channel'].start_with? "/mentions")
+          post = Post.create( _id: message['id'],
+                              text: message['data']['text'],
+                              channel: message['channel'],
+                              username: message['data']['username']
+                            )
         end
         
         if post && post.created_at

@@ -1,6 +1,3 @@
-$LOAD_PATH.unshift File.dirname(__FILE__) + '/sinatra/lib'
-$LOAD_PATH.unshift File.dirname(__FILE__)
-
 #require "sunshowers"
 #require "bundler/setup"  
 
@@ -21,7 +18,8 @@ require 'mongoid'
 require 'digest/sha1'
 require 'omniauth'
 require 'mail'
-require 'postmark'
+require 'postmark' 
+require 'coffee-script'
 
 load 'configure.rb'
 load 'models.rb' 

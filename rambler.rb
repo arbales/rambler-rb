@@ -1,7 +1,12 @@
 get '/favicon.ico' do
   expires 31536000
   pass
-end     
+end        
+
+
+get '/cafe/:name.js' do
+  coffee("/coffee/#{params[:name]}".to_sym, no_wrap: true)
+end
 
 error do
   if request.xhr?  
