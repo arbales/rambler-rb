@@ -207,6 +207,16 @@ input[type=text]:focus {
 }
 button, input[type=button], input[type=submit] {
   font-size:14px;
+}            
+
+#preview {
+  width:185px;
+  height:185px;
+  background:url('/images/preview.png') no-repeat;
+  position:absolute;
+  top:0px;
+  right:0px; 
+  z-index:990; 
 }
 
 #scroll_top {
