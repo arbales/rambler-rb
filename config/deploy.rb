@@ -1,8 +1,14 @@
 #require "bundler/capistrano"
+$:.unshift(File.expand_path('./lib', ENV['rvm_path'])) # Add RVM's lib directory to the load path.
+require "rvm/capistrano"                  # Load RVM's capistrano plugin.
+set :rvm_type, :user
+set :rvm_ruby_string, '1.9.2'        # Or whatever env you want it to run in.
 
 set :application, "rambler"
 set :user, "austin" # I used root, less problems, but not recommended.
-set :scm, :git
+set :scm, :git     
+#set :thin, "/home/austin/.rvm/gems/ruby-1.9.2-p0/bin/thin"
+
 
 # This distinction is necessary if the way you access github locally
 # is different from the way your production environment will access it.
