@@ -1,25 +1,20 @@
-#require "bundler/capistrano"
-$:.unshift(File.expand_path('./lib', ENV['rvm_path'])) # Add RVM's lib directory to the load path.
-require "rvm/capistrano"                  # Load RVM's capistrano plugin.
+$:.unshift(File.expand_path('./lib', ENV['rvm_path']))
+require "rvm/capistrano"
 set :rvm_type, :user
-set :rvm_ruby_string, '1.9.2'        # Or whatever env you want it to run in.
+set :rvm_ruby_string, '1.9.2'
+require "bundler/capistrano"
 
 set :application, "rambler"
-set :user, "austin" # I used root, less problems, but not recommended.
+set :user, "austin"
 set :scm, :git     
-#set :thin, "/home/austin/.rvm/gems/ruby-1.9.2-p0/bin/thin"
 
-
-# This distinction is necessary if the way you access github locally
-# is different from the way your production environment will access it.
-# For me it was the case.
 set :local_repository, "git@github.com:arbales/rambler.git"
 set :repository, "git@github.com:arbales/rambler.git"
 
-set :deploy_to, "/usr/local/WebServer/rambler" # path to app on remote machine
-set :deploy_via, :remote_cache # quicker checkouts from github
+set :deploy_to, "/usr/local/WebServer/rambler"
+set :deploy_via, :remote_cache
 
-set :domain, 'cake.417east.com' # your remote machine's domain name goes here
+set :domain, 'cake.417east.com'
 role :app, domain
 role :web, domain
 
@@ -40,7 +35,6 @@ namespace :deploy do
     deploy.start
   end
   
-  # This will make sure that Capistrano doesn't try to run rake:migrate (this is not a Rails project!)
   task :cold do
     deploy.update
     deploy.start
