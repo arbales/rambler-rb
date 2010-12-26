@@ -1,4 +1,5 @@
 source "http://rubygems.org"  
+gem 'boom', :git => 'git://github.com/arbales/boom.git'
 gem 'capistrano'
 gem 'activesupport', "< 3.0.2"
 gem 'thin'

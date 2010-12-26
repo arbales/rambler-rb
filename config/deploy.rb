@@ -2,11 +2,14 @@ $:.unshift(File.expand_path('./lib', ENV['rvm_path']))
 require "rvm/capistrano"
 set :rvm_type, :user
 set :rvm_ruby_string, '1.9.2'
-require "bundler/capistrano"
+require "bundler/capistrano" 
+require 'boom/capistrano'
 
 set :application, "rambler"
 set :user, "austin"
 set :scm, :git     
+
+include_boom 'rambler'
 
 set :local_repository, "git@github.com:arbales/rambler.git"
 set :repository, "git@github.com:arbales/rambler.git"
