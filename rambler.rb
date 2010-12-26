@@ -26,8 +26,13 @@ not_found do
   end
 end
 
-get '/' do  
-  @js = ["ABApp.authorize('#{session[:token]}', '#{session[:username]}', '#{session[:userid]}')"]
+get '/' do                       
+  if session[:username].start_with? "profile.php"
+    abmessage_with_redirect :error, "Sorry, you are not eligible to participate in this preview.", "/logout"
+  else
+    @js = ["ABApp.authorize('#{session[:token]}', '#{session[:username]}', '#{session[:userid]}')"]
+  end
+  
   haml :index         
 end     
 
