@@ -1,4 +1,4 @@
-require "bundler/capistrano"
+#require "bundler/capistrano"
 
 set :application, "rambler"
 set :user, "austin" # I used root, less problems, but not recommended.
