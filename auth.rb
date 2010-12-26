@@ -9,7 +9,7 @@ get '/auth/facebook/callback' do
     # do whatever you want with the information!
     person = Person.where("#{params[:name]}_uid".to_sym => auth['uid'])[0]     
 
-    unless auth['user_info']['nickname'].start_with? "profile.php"
+    if auth['user_info']['nickname'].start_with? "profile.php"
       abmessage_with_redirect :error, "Sorry, you aren&rsquo;t eligble to participate in this preview.", '/'
     end
       
