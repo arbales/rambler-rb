@@ -22,11 +22,11 @@ set :admin_runner, runner
 
 namespace :deploy do
   task :start, :roles => [:web, :app] do
-    run "cd #{deploy_to}/current && nohup thin -C config/production.yml -R thin/config.ru start"
+    run "cd #{deploy_to}/current && nohup thin -C config/production.yml -R ./config.ru start"
   end
 
   task :stop, :roles => [:web, :app] do
-    run "cd #{deploy_to}/current && nohup thin -C config/production.yml -R thin/config.ru stop"
+    run "cd #{deploy_to}/current && nohup thin -C config/production.yml -R ./config.ru stop"
   end
 
   task :restart, :roles => [:web, :app] do
