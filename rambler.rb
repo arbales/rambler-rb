@@ -40,6 +40,7 @@ end
 
 
 get '/people' do
+  rack_protected!
   @people = Person.all
   haml :people
 end 

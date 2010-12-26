@@ -36,14 +36,14 @@ get '/logout' do
 end
 
 def rack_protected!
-  response['WWW-Authenticate'] = %(Basic realm="Podium Core") and \
+  response['WWW-Authenticate'] = %(Basic realm="Rambler") and \
   throw(:halt, [401, "Not authorized\n"]) and \
   return unless rack_authorized?
 end
 
 def rack_authorized?
   @auth ||=  Rack::Auth::Basic::Request.new(request.env)
-  @auth.provided? && @auth.basic? && @auth.credentials && @auth.credentials == ['ccon', 'rocketlemon']
+  @auth.provided? && @auth.basic? && @auth.credentials && @auth.credentials == [ENV['R_USER'], ENV['R_PASSWORD']]
 end
 
 
