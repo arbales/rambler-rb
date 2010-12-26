@@ -21,9 +21,7 @@ require 'renderer.rb'
     load './errors.rb'
     load './posts.rb'
     load './channels.rb' 
-    
-    include Rambler::Models
-    
+        
     get '/favicon.ico' do
       expires 31536000
       pass
