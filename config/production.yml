@@ -3,7 +3,7 @@
    chdir: /usr/local/WebServer/rambler/current
    user: austin
    servers: 3
-   port: 8001
+   port: 8080
    pid: /usr/local/WebServer/rambler/current/tmp/pids/thin.pid
    rackup: /usr/local/WebServer/rambler/current/config.ru
    log: /usr/local/WebServer/rambler/current/log/thin.log
