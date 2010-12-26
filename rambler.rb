@@ -11,20 +11,19 @@ require 'postmark'
 require 'sinatra/base'     
 
 require 'renderer.rb'
-require 'models.rb'
- 
-
-module Rambler
-  
-  class Application < Sinatra::Application # I am choosing to do this.
+   
+  class RamblerApp < Sinatra::Application # I am choosing to do this.
         
     load './configure.rb'
+    load './models.rb' 
     load './helpers.rb'
     load './auth.rb'  
     load './errors.rb'
     load './posts.rb'
     load './channels.rb' 
-        
+    
+    include Rambler::Models
+    
     get '/favicon.ico' do
       expires 31536000
       pass
@@ -67,4 +66,3 @@ module Rambler
     end 
 
   end  
-end

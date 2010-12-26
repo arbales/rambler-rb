@@ -10,7 +10,7 @@ require 'extensions.rb'
          
 
 app = Rack::Builder.new {
-  run Rambler::Application
+  run RamblerApp
 }
 
 $faye = Faye::RackAdapter.new(app.to_app, :mount => '/faye')    
