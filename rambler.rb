@@ -27,7 +27,7 @@ not_found do
 end
 
 get '/' do                       
-  if session[:username].start_with? "profile.php"
+  if session[:username] && session[:username].start_with?("profile.php")
     abmessage_with_redirect :error, "Sorry, you are not eligible to participate in this preview.", "/logout"
   else
     @js = ["ABApp.authorize('#{session[:token]}', '#{session[:username]}', '#{session[:userid]}')"]
