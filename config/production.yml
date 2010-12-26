@@ -1,7 +1,6 @@
 ---
    environment: development
    chdir: /usr/local/WebServer/rambler/current
-   address: 127.0.0.1
    user: austin
    port: 8080
    pid: /usr/local/WebServer/rambler/current/tmp/pids/thin.pid
