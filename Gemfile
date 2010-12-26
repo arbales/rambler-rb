@@ -1,4 +1,5 @@
-source "http://rubygems.org"
+source "http://rubygems.org"  
+gem 'capistrano'
 gem 'activesupport', "< 3.0.2"
 gem 'thin'
 gem 'eventmachine'

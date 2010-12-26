@@ -1,0 +1,13 @@
+---
+   environment: development
+   chdir: /usr/local/WebServer/rambler/current
+   address: 127.0.0.1
+   user: austin
+   port: 8080
+   pid: /usr/local/WebServer/rambler/current/tmp/pids/thin.pid
+   rackup: /usr/local/WebServer/rambler/current/config.ru
+   log: /usr/local/WebServer/rambler/current/log/thin.log
+   max_conns: 1024
+   timeout: 30
+   max_persistent_conns: 512
+   daemonize: true
