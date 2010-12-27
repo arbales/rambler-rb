@@ -1,3 +1,6 @@
+# Wow, look at this, the following two routes could easily
+# be in the same route, and not be nearly as ugly as they are now.
+# I'll do that soon.
 
 get '/archive/mentions/:username' do  
   
@@ -26,12 +29,11 @@ get '/archive/mentions/:username' do
   mentions.to_json
 end
 get '/archive/:channel' do
-  # Add AUTH!
   
-  #person = Person.criteria.id(params[:api_user_id]).limit(1)[0]
-  #unless person && person.verify(params[:api_user_key])
-  #  error 403, "You aren't authorized to read this stream."
-  #end
+  # person = Person.criteria.id(params[:api_user_id]).limit(1)[0]
+  # unless person && person.verify(params[:api_user_key])
+  #   error 403, "You aren't authorized to read this stream."
+  # end
   
   if params[:before] != 'false'
     mentions =  Post.where(:channel => "/#{params[:channel]}")
@@ -51,31 +53,12 @@ get '/archive/:channel' do
   end
   content_type :json
   mentions.to_json
-  #mentions.to_json
-end
-
-
-
-delete '/channel/:id' do
-  channel = Channel.criteria.id(params[:id])[0]    
-  channel.destroy
 end
 
 get '/channels' do
   @channels = Channel.all
   haml :channels
-end    
-
-get '/channels/destroy' do
-  Channel.all.destroy_all
-end  
-
-post '/channels/sidebar' do
-  members = params[:members].strip().split(",")    
-  user = params[:username]                       
-  name = params[:name]
-  
-end      
+end
 
 post '/channels' do        
   input = params[:channel]                     
@@ -109,8 +92,8 @@ post '/channels' do
   end
 end 
 
-get '/channel/destroy/:id' do
-  @model = "channel"
-  @id = params[:id]
-  haml :destroy_confirm, layout: !request.xhr?
-end
+# get '/channel/destroy/:id' do
+#   @model = "channel"
+#   @id = params[:id]
+#   haml :destroy_confirm, layout: !request.xhr?
+# end
