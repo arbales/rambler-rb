@@ -55,10 +55,6 @@ require 'renderer.rb'
       haml :people
     end 
 
-    get '/people/destroy' do
-      Person.all.destroy_all
-    end 
-
     get '/hbs/:name.hbs' do
      partial params[:name]
     end 
