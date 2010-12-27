@@ -1,4 +1,5 @@
-use OmniAuth::Builder do
+use OmniAuth::Builder do                                                   
+  # Wow, this is insecure ain't it!?
   provider :facebook, '172085949497689', '3bd1ec690772a06761401762720cb9e1', scope: 'email,offline_access'
 end 
 
