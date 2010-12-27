@@ -8,10 +8,10 @@ class ServerAuth
     
 
     # Get subscribed channel and auth token
-    subscription = message['subscription']
-    msg_token    = message['ext'] && message['ext']['authToken']
-    msg_user    = message['ext'] && message['ext']['authUser']
-    msg_userid    = message['ext'] && message['ext']['authUserID']
+    subscription =  message['subscription']
+    msg_token =     message['ext']  && message['ext']['authToken']
+    msg_user =      message['ext']  && message['ext']['authUser']
+    msg_userid =    message['ext']  && message['ext']['authUserID']
     
   begin
     
@@ -21,8 +21,6 @@ class ServerAuth
     unless (msg_token && msg_user && msg_userid && person)
       message['ext']['status'] = 'logout'
       message['error'] = "You are not logged in."  
-     
-#      raise NotLoggedIn
     end
     
     if (subscription.start_with?("/people/"))                                             
@@ -31,30 +29,27 @@ class ServerAuth
       unless (person.verify(msg_token))
         message['ext']['channel_reference'] = subscription
         message['error'] = "You couldn't join #{subscription} because of a permissions problem."
-      end
+      end       
+      
     elsif (subscription.start_with?("/mentions/"))
       person = Person.first(:conditions => { :username => subscription.sub("/mentions/", "")})     
       # Add an error if the tokens don't match
       unless (person.verify(msg_token))
         message['ext']['channel_reference'] = subscription
         message['error'] = "You couldn't join #{subscription} because of a permissions problem."
-      end
+      end             
+      
     elsif (sub = Channel.first(conditions:{name: subscription.sub("/", "")}))
       person = Person.criteria.id(msg_userid).limit(1)[0]     
-      if sub.allowed_users.include?(person.username) && person.verify(msg_token)
-        # successful
-      else
+      unless sub.allowed_users.include?(person.username) && person.verify(msg_token)
         message['error'] = "#{person.username} couldn't join #{subscription}, are you allowed to?"
-      end  
+      end                                                                           
+      
     end 
-  rescue NotLoggedIn
-    message['ext']['channel_reference'] = subscription
-    message['error'] = "You are not logged in."
   rescue => e 
     message['ext']['channel_reference'] = subscription
     message['error'] = "You couldn't join #{subscription} because of a permissions problem."
   ensure
-    # Call the server back now we're done
    callback.call(message)   
   end
   end
@@ -74,46 +69,42 @@ class Archiver
         tokens = message['data']['text'].split(" ")        
         message['data']['_id'] = message['id']
         
-        if(!(message['channel'].start_with?("/mentions")))
-          puts "Block 1"
-          post = Post.new(:_id => message['id'],
-                      :text => message['data']['text'],
-                      :channel => message['channel'],
-                      :username => message['data']['username'])
+        unless message['channel'].start_with?("/mentions")
+          post = Post.new _id:      message['id'],
+                          text:     message['data']['text'],
+                          channel:  message['channel'],
+                          username: message['data']['username']
+                          
           if message['data']['reply']
             post['reply'] = message['data']['reply']
           end
-          post.save()
+          post.save
         end 
         
         
         if (tokens[0].start_with?("@") && !(message['channel'].start_with?("/mentions")))
-          puts "Block 2"
-          post = Post.create(:_id => message['id'],
-                      :text => message['data']['text'],
-                      :channel => "/mentions/#{tokens[0].sub('@', '')}",
-                      :username => message['data']['username'])
+          post = Post.create _id:     message['id'],
+                             text:    message['data']['text'],
+                             channel: "/mentions/#{tokens[0].sub('@', '')}",
+                             username: message['data']['username']
           
-          $faye.get_client.publish("/mentions/#{tokens[0].sub('@', '')}", {
-            'text'      => message['data']['text'],
-            'username' => message['data']['username']
-          })
+          $faye.get_client.publish "/mentions/#{tokens[0].sub('@', '')}", 
+                                   { 'text' => message['data']['text'],
+                                     'username' => message['data']['username']}
         end
         
         if (message['channel'].start_with? "/mentions")
-          post = Post.create( _id: message['id'],
+          post = Post.create  _id: message['id'],
                               text: message['data']['text'],
                               channel: message['channel'],
                               username: message['data']['username']
-                            )
+                            
         end
         
         if post && post.created_at
           message['data']['created_at'] = post.created_at
         end
-          
-        
-        
+
       end
     rescue => e
       puts e
@@ -136,10 +127,5 @@ class Formatter
     ensure                               
       callback.call(message)
     end
-  end
-end
-
-class Forwarder
-  def incoming(message, clallback)
   end
 end
