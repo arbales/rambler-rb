@@ -1,21 +1,12 @@
-## Don't use Rambler.
-
 # Rambler
-Rambler is a prototype of a private social networking and communication tool. It runs over Faye (implements Bayeux) so it's "real-time". I've developed it over the past week or so during some downtime at Ododpod.
-
-See INSTALL.txt for installation instructions. It's pretty straightforward. You'll need:
-
-* Ruby 1.9.2
-* Bundler
-* mongodb
-* thin
+Rambler is a prototype of a tool that I describe as inspired by IRC, Campfire and Twitter. It uses [Faye](https://github.com/jcoglan/faye) (an implementation of the Bayeux protocol) so it's "real-time". I started building it during some downtime at Ododpod.
 
 ## Why did you make this?
-Odopod has been trying out Yammer. Have you used it? It's bastard child of Facebook and Twitter. It's also catered towards
-huge groups of people, not a studio of 52.
+Odopod uses Yammer. Have you used it? It's bastard child of Facebook and Twitter. It's also catered towards
+huge groups of people, not a studio of 52. I think it's ugly and over-complicated, and I was really bored one day.
 
-## Who owns this? What's the license?
-I'd like to release it with an MIT license. I'm building it during the working hours at Odopod, but I don't anticipate a conflict over releasing it. If Odopod likes it, then why not share it? If they hate it, then who cares? This project falls under the category of "R&D"
+## Your codez are awful
+I'm not a developer, I just play a developer in real-life sometimes. Tell me what I'm doing wrong or just laugh at me.
 
-## Why Ruby 1.9.2
-Because.
+## Demo
+A kindofworking demo can be played with at http://rambler.pris.ma. You'll need a Facebook account with a url, like facebook.com/arbales _not like_ /profile.php?1234567.
