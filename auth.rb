@@ -31,11 +31,7 @@ get '/auth/facebook/callback' do
 end 
  
 get '/logout' do
-  session[:u_full_name] = nil
-  session[:u_image] = nil
-  session[:token] = nil
-  session[:username] = nil
-  session[:userid] = nil
+  session.clear
   redirect "/"
 end
 
@@ -50,63 +46,6 @@ def rack_authorized?
   @auth.provided? && @auth.basic? && @auth.credentials && @auth.credentials == [ENV['RAMBLER_USER'], ENV['RAMBLER_PASSWORD']]
 end
 
-
-def requires_session_with_redirect!
-  unless (@current_user rescue nil)
-    redirect "/login?return_to=#{request.path_info}"
-  end
-end                  
-
-
-def requires_users!(array)
-  unless (arrayclass == Array)
-    error "An array of users is required.", 500
-    halt
-  end                                          
-  protect_silently!
-  if (array.include?(@current_user))
-    return true
-  else
-    return false
-  end
-end
-
 def protected!
   requires_session_with_redirect!
-end
-
-def protected_for_users_with_redirect!(collection)
-#  unless (collection.class == DataMapper::Collection)
-#    error "An collection of users is required.", 500
-#    halt
-#  end
-  unless (@current_user)
-    redirect "/login?return_to=#{request.path_info}"
-  end
-  if (collection.include?(@current_user) rescue false)
-    return true
-  else
-    flash[:error] = "Sorry, you don't have permission to do that."
-    redirect "/"
-  end  
-end              
-
-def protected_for_users!(collection)
-  unless (collection.class == DataMapper::Collection)
-    error "An collection of users is required.", 500
-    halt
-  end
-  if (collection.include?(@current_user) rescue false)
-    return true
-  else
-    error "You don't have permission to access that resource.", 403
-  end
-end
-                    
-def protect_silently!
-  unless (@current_user rescue nil)
-    error "Either your session expired or you are not logged in.", 403
-    halt
-  end
-  
 end
