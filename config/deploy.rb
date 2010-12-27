@@ -9,7 +9,7 @@ set :application, "rambler"
 set :user, "austin"
 set :scm, :git     
 
-include_boom 'rambler'
+boom 'rambler'
 
 set :local_repository, "git@github.com:arbales/rambler.git"
 set :repository, "git@github.com:arbales/rambler.git"
