@@ -1,3 +1,7 @@
+Array::add = (element) -> 
+  this.push element
+  this
+
 # ## StorageManager              
 # Aids in interacting with the HTML5 localStorage API.
 class StorageManager
@@ -52,11 +56,12 @@ class SubscriptionManager
       ABApp.sharedStorageManager().set('channels:remembered', memory.split(",").without(@channels[0]).join(','))
     this
   remember: ->
+    puts "Remembering"
     memory = ABApp.sharedStorageManager().get 'channels:remembered'
     if memory?
       memory = memory.split(',')
       unless memory.include(@channels[0])
-        ABApp.sharedStorageManager().set('channels:remembered', memory.push(@channels[0]).join(','))
+        ABApp.sharedStorageManager().set('channels:remembered', memory.add(@channels[0]).join(','))
     else 
       ABApp.sharedStorageManager().set('channels:remembered', @channels.join(','))
     this
@@ -147,7 +152,7 @@ class SubscriptionManager
     if @counter? then @counter else false
   incrementCounter: ->
     if @counter?     
-      count = parseInt(counter.innerHTML) || 0
+      count = parseInt(@counter.innerHTML) || 0
       count++
       @counter.update(count)
     this
@@ -226,7 +231,7 @@ class SubscriptionManager
     if @element?                                                                   
       mid = if message._id? then message._id else message.id
       el = new Element('div').addClassName('message').writeAttribute('data-mid',mid)
-      if not message.created_at?
+      if message.created_at?
         if message.persists is "false"
           el.addClassName('persists-false')
         if not message.invitation?

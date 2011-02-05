@@ -17,11 +17,11 @@ get '/auth/facebook/callback' do
       person = Person.create(:username => auth['user_info']['nickname'],
                              :key => BCrypt::Engine.generate_salt,
                              "#{params[:name]}_uid".to_sym => auth['uid'],
-                             :fb_image => session[:u_image])
+                             :fb_image => "https://graph.facebook.com/#{auth['user_info']['nickname']}/picture")
     end
    
     session[:u_full_name] = auth['user_info']['name']
-    session[:u_image] = (params[:name] == "facebook") ? ("https://graph.facebook.com/"+ auth['user_info']['nickname'] + "/picture") : (auth['user_info']['image'])
+    session[:u_image] = "https://graph.facebook.com/#{auth['user_info']['nickname']}/picture"
     session[:token] = Digest::SHA1.hexdigest(person.key + "salt" + person.username)
     session[:username] = person.username
     session[:userid] = person.id                       
@@ -29,6 +29,12 @@ get '/auth/facebook/callback' do
       
                          
 end 
+
+get '/me/image' do
+  person = Person.find(session[:userid])
+  person.fb_image = session[:u_image]
+  person.save
+end
  
 get '/logout' do
   session.clear
