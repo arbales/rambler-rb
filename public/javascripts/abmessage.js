@@ -20,30 +20,30 @@ var ABMessage = Class.create({
 		}
 		
 		ABMessageResizer();
-	  $('message').className = this.options.type + " message";
+	  $('flash').className = this.options.type + " flash";
 		this.options.onCreate();
-	$('message').down('p').update(message);
-		$('message').appear({duration: .25}); 
-		$('message').observe('click', function(){
+	$('flash').down('p').update(message);
+		$('flash').appear({duration: .25}); 
+		$('flash').observe('click', function(){
   		this.options.onClose();
-			$('message').fade({duration: .25}); 
+			$('flash').fade({duration: .25}); 
 		}.bind(this));  
 		
 		//  `ABMessages` can have timeouts. 
 		if (this.options.timeout > 0){
 		  __abmessage_timer = setTimeout(function() {
-		    $('message').fade({duration: .25});
+		    $('flash').fade({duration: .25});
 		  }, this.options.timeout * 1000);
 		}
 	}, 
 	// Sets an `ABMessage`'s type.                                   
 	type: function(type){
-		$('message').className = type + " message";
+		$('flash').className = type + " flash";
 		return this;
 	}, 
 	// Updates the text of an `ABMessage`.
 	update: function(text){
-		$('message').down('p').update(text);
+		$('flash').down('p').update(text);
 		return this;
 	},                                    
 	// Closes an ABMessage, optionally performing a callback.
@@ -54,23 +54,32 @@ var ABMessage = Class.create({
 			callback = function(){}
 		}                 
 		this.options.onClose();
-		$('message').fade({duration: .25});
+		$('flash').fade({duration: .25});
 	}
 }); 
 
-var ABMessageResizer = function(event){
+var ABMessageResizer = function(event){  
+  
 	var vp = document.viewport.getWidth() - document.width;
-	var right =(document.width - $$(".nav ul").first().viewportOffset().left + vp);
+	var right =(document.width - $$(".nav").first().viewportOffset().left + vp);
 	
-	if (document.viewport.getScrollOffsets().top > ($$(".nav ul").first().viewportOffset().top + $$(".nav ul").first().measure('height') + 3)){
+	if (document.viewport.getScrollOffsets().top > ($$(".nav").first().viewportOffset().top + $$(".nav").first().measure('height')+65)){
 		var top = "0";       
-		var position = "fixed";
-	} else {
-		var top = $$(".nav ul").first().viewportOffset().top + document.viewport.getScrollOffsets().top;
-		var position = "absolute";
+		var position = "fixed"; 
+		$$('.publisher').first().setStyle("margin-top:"+$$(".nav").first().measure('height')+"px");
+	} else { 
+		var top = "";  
+		$$('.publisher').first().setStyle("margin-top:1ex");
+		var position = "static";
+	}  
+	
+	if (document.viewport.getScrollOffsets().top > window.innerHeight){
+	  $('scroll_top').show();
+	}else{
+	  $('scroll_top').hide();
 	}
 	
 	width = document.width - right;                               
-	
-	$('message').setStyle("right:"+right+"px;width:"+width+"px;top:"+top+"px;"+"position:"+position+";");
+	$$('.nav').first().setStyle("top:"+top+"px;"+"position:"+position+";width:940px;z-index:100");
+	//$('flash').setStyle("right:"+right+"px;width:"+width+"px;top:"+top+"px;"+"position:"+position+";");
 }

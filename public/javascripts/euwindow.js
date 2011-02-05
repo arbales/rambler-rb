@@ -229,8 +229,6 @@
 		  Object.extend(this.options, options || { });
 
       if (this.options.modal == true){
-			  console.log("EUMessage.initialize app:is_modal");
-				$('app_element').fire('app:is_modal');
 			} 
 			if (this.options.type == 'informational'){
 				this.element.update('<div class="widget full"><h2>'+title+'</h2><div class="form_buffer"><p class="text">'+message+'</p></div><p class="action_bar"><input type="button" class="button-nevermind action" value="Dismiss" /></p></div>');
@@ -246,7 +244,6 @@
 			}
 	 		this.insert();  
 			if (this.options.modal == false){
-			  console.log("EUWindow.initialize app:standby");
 				$('app_element').fire("app:standby");
 			}
 		}

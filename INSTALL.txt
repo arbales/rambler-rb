@@ -11,7 +11,7 @@ brew install git
 brew install mongodb
 
 # Run mongodb
-sudo mongod run --config /usr/local/Cellar/mongodb/1.6.3-x86_64/mongod.conf
+mongod run --config /usr/local/Cellar/mongodb/1.6.3-x86_64/mongod.conf
 
 # RVM is the way to manage your rubies.
 bash < <( curl http://rvm.beginrescueend.com/releases/rvm-install-head )
