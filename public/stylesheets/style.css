@@ -417,7 +417,12 @@ span.short_list {
           
   .messages .message {
     padding:2ex 1ex;
-  }               
+  }
+  
+  .messages .message.invitation {
+    background-color:#F6F3D2;
+  }
+                 
   .messages .controls {
     padding:0px;
     display:inline-block;

@@ -1,0 +1,453 @@
+<!DOCTYPE html>  <html> <head>   <title>handlebars.js</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>            <div id="jump_to">         Jump To &hellip;         <div id="jump_wrapper">           <div id="jump_page">                                           <a class="source" href="abapp.html">                 abapp.js               </a>                                           <a class="source" href="abmessage.html">                 abmessage.js               </a>                                           <a class="source" href="app.html">                 app.js               </a>                                           <a class="source" href="compiler.html">                 compiler.js               </a>                                           <a class="source" href="def.html">                 def.js               </a>                                           <a class="source" href="euwindow.html">                 euwindow.js               </a>                                           <a class="source" href="faye_ext.html">                 faye_ext.js               </a>                                           <a class="source" href="handlebars.html">                 handlebars.js               </a>                                           <a class="source" href="lowpro.html">                 lowpro.js               </a>                                           <a class="source" href="managers.html">                 managers.js               </a>                                           <a class="source" href="mustache.html">                 mustache.js               </a>                                           <a class="source" href="protoaculous.min.html">                 protoaculous.min.js               </a>                                           <a class="source" href="prototype.html">                 prototype.js               </a>                                           <a class="source" href="prototype.s2.min.html">                 prototype.s2.min.js               </a>                                           <a class="source" href="sha1.html">                 sha1.js               </a>                                           <a class="source" href="templates.html">                 templates.js               </a>                        </div>         </div>       </div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               handlebars.js             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>                            </td>             <td class="code">               <div class="highlight"><pre><span class="kd">var</span> <span class="nx">Handlebars</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">compilerCache</span><span class="o">:</span> <span class="p">{},</span>
+
+  <span class="nx">compile</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">string</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compilerCache</span><span class="p">[</span><span class="nx">string</span><span class="p">]</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">fnBody</span> <span class="o">=</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compileFunctionBody</span><span class="p">(</span><span class="nx">string</span><span class="p">);</span>
+      <span class="kd">var</span> <span class="nx">fn</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Function</span><span class="p">(</span><span class="s2">&quot;context&quot;</span><span class="p">,</span> <span class="s2">&quot;fallback&quot;</span><span class="p">,</span> <span class="s2">&quot;Handlebars&quot;</span><span class="p">,</span> <span class="nx">fnBody</span><span class="p">);</span>
+      <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compilerCache</span><span class="p">[</span><span class="nx">string</span><span class="p">]</span> <span class="o">=</span> 
+          <span class="kd">function</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">fallback</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">fn</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">fallback</span><span class="p">,</span> <span class="nx">Handlebars</span><span class="p">);</span> <span class="p">};</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compilerCache</span><span class="p">[</span><span class="nx">string</span><span class="p">];</span>
+  <span class="p">},</span>
+
+  <span class="nx">compileToString</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">string</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">fnBody</span> <span class="o">=</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compileFunctionBody</span><span class="p">(</span><span class="nx">string</span><span class="p">);</span>
+    <span class="k">return</span> <span class="s2">&quot;function(context, fallback) { &quot;</span> <span class="o">+</span> <span class="nx">fnBody</span> <span class="o">+</span> <span class="s2">&quot;}&quot;</span><span class="p">;</span>
+  <span class="p">},</span>
+  
+  <span class="nx">compileFunctionBody</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">string</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">compiler</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">Compiler</span><span class="p">(</span><span class="nx">string</span><span class="p">);</span>
+      <span class="nx">compiler</span><span class="p">.</span><span class="nx">compile</span><span class="p">();</span>
+
+      <span class="k">return</span> <span class="s2">&quot;fallback = fallback || {}; var stack = [];&quot;</span> <span class="o">+</span> <span class="nx">compiler</span><span class="p">.</span><span class="nx">fn</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">isFunction</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">toString</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">fn</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;[object Function]&quot;</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">trim</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">str</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/^\s+|\s+$/g</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span> 
+  <span class="p">},</span>
+
+  <span class="nx">escapeText</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">string</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">string</span> <span class="o">=</span> <span class="nx">string</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&#39;/g</span><span class="p">,</span> <span class="s2">&quot;\\&#39;&quot;</span><span class="p">);</span>
+    <span class="nx">string</span> <span class="o">=</span> <span class="nx">string</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/\&quot;/g</span><span class="p">,</span> <span class="s2">&quot;\\\&quot;&quot;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">escapeExpression</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">string</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>don't escape SafeStrings, since they're already safe</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="p">(</span><span class="nx">string</span> <span class="k">instanceof</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">SafeString</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">string</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">string</span> <span class="o">===</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">string</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">string</span><span class="p">.</span><span class="nx">toString</span><span class="p">().</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&amp;(?!\w+;)|[&quot;\\&lt;&gt;]/g</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">switch</span><span class="p">(</span><span class="nx">str</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="s2">&quot;&amp;&quot;</span><span class="o">:</span>
+          <span class="k">return</span> <span class="s2">&quot;&amp;amp;&quot;</span><span class="p">;</span>
+          <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="s1">&#39;&quot;&#39;</span><span class="o">:</span>
+          <span class="k">return</span> <span class="s2">&quot;\&quot;&quot;</span><span class="p">;</span>
+        <span class="k">case</span> <span class="s2">&quot;\\&quot;</span><span class="o">:</span>
+          <span class="k">return</span> <span class="s2">&quot;\\\\&quot;</span><span class="p">;</span>
+          <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="s2">&quot;&lt;&quot;</span><span class="o">:</span>
+          <span class="k">return</span> <span class="s2">&quot;&amp;lt;&quot;</span><span class="p">;</span>
+          <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="s2">&quot;&gt;&quot;</span><span class="o">:</span>
+          <span class="k">return</span> <span class="s2">&quot;&amp;gt;&quot;</span><span class="p">;</span>
+          <span class="k">break</span><span class="p">;</span>
+        <span class="k">default</span><span class="o">:</span>
+          <span class="k">return</span> <span class="nx">str</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">});</span>
+  <span class="p">},</span>
+
+  <span class="nx">compilePartial</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">partial</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span><span class="nx">partial</span><span class="p">))</span> <span class="p">{</span>
+      <span class="nx">compiled</span> <span class="o">=</span> <span class="nx">partial</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="nx">compiled</span> <span class="o">=</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compile</span><span class="p">(</span><span class="nx">partial</span><span class="p">);</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="nx">compiled</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">evalExpression</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">stack</span><span class="p">,</span> <span class="nx">fallback</span><span class="p">)</span> <span class="p">{</span>
+		<span class="nx">fallback</span> <span class="o">=</span> <span class="nx">fallback</span> <span class="o">||</span> <span class="p">{};</span>
+		
+    <span class="kd">var</span> <span class="nx">parsedPath</span> <span class="o">=</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">parsePath</span><span class="p">(</span><span class="nx">path</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">depth</span> <span class="o">=</span> <span class="nx">parsedPath</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+    <span class="kd">var</span> <span class="nx">parts</span> <span class="o">=</span> <span class="nx">parsedPath</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">depth</span> <span class="o">&gt;</span> <span class="nx">stack</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">context</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">depth</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">context</span> <span class="o">=</span> <span class="nx">stack</span><span class="p">[</span><span class="nx">stack</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="nx">depth</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">parts</span><span class="p">.</span><span class="nx">length</span> <span class="o">&amp;&amp;</span> <span class="k">typeof</span> <span class="nx">context</span> <span class="o">!==</span> <span class="s2">&quot;undefined&quot;</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">context</span> <span class="o">=</span> <span class="nx">context</span><span class="p">[</span><span class="nx">parts</span><span class="p">[</span><span class="nx">i</span><span class="p">]];</span>
+    <span class="p">}</span>
+		
+		<span class="k">if</span> <span class="p">(</span><span class="nx">parts</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">1</span> <span class="o">&amp;&amp;</span> <span class="k">typeof</span> <span class="nx">context</span> <span class="o">===</span> <span class="s2">&quot;undefined&quot;</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="nx">fallback</span><span class="p">[</span><span class="nx">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]];</span>
+		<span class="p">}</span>
+		
+    <span class="k">return</span> <span class="nx">context</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">buildContext</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">stack</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">ContextWrapper</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">stack</span><span class="p">)</span> <span class="p">{</span> 
+      <span class="k">this</span><span class="p">.</span><span class="nx">__stack__</span> <span class="o">=</span> <span class="nx">stack</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">__get__</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">path</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">evalExpression</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="k">this</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">__stack__</span><span class="p">);</span>
+      <span class="p">};</span>
+    <span class="p">};</span>
+
+    <span class="nx">ContextWrapper</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="nx">context</span><span class="p">;</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">ContextWrapper</span><span class="p">(</span><span class="nx">stack</span><span class="p">);</span>
+  <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>spot to memoize paths to speed up loops and subsequent parses</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">pathPatterns</span><span class="o">:</span> <span class="p">{},</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>returns a two element array containing the numbers of contexts to back up the stack and
+the properties to dig into on the current context</p>
+
+<p>for example, if the path is "../../alan/name", the result will be [2, ["alan", "name"]].</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">parsePath</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">path</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">path</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">[]];</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">pathPatterns</span><span class="p">[</span><span class="nx">path</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">pathPatterns</span><span class="p">[</span><span class="nx">path</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="kd">var</span> <span class="nx">parts</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">readDepth</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">depth</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">dig</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">j</span> <span class="o">=</span> <span class="nx">parts</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">j</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">switch</span><span class="p">(</span><span class="nx">parts</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="s2">&quot;..&quot;</span><span class="o">:</span>
+          <span class="k">if</span> <span class="p">(</span><span class="nx">readDepth</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">Exception</span><span class="p">(</span><span class="s2">&quot;Cannot jump out of context after moving into a context.&quot;</span><span class="p">);</span> 
+          <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">depth</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+          <span class="p">}</span>
+          <span class="k">break</span><span class="p">;</span>
+        <span class="k">case</span> <span class="s2">&quot;.&quot;</span><span class="o">:</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>do nothing - using .'s is pretty dumb, but it's also basically free for us to support</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="k">case</span> <span class="s2">&quot;this&quot;</span><span class="o">:</span></pre></div>             </td>           </tr>                               <tr id="section-6">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-6">&#182;</a>               </div>               <p>if we do nothing you'll end up sticking in the same context</p>             </td>             <td class="code">               <div class="highlight"><pre>          <span class="k">break</span><span class="p">;</span>
+        <span class="k">default</span><span class="o">:</span>
+          <span class="nx">readDepth</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+          <span class="nx">dig</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">parts</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+   
+    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="p">[</span><span class="nx">depth</span><span class="p">,</span> <span class="nx">dig</span><span class="p">];</span>
+    <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">pathPatterns</span><span class="p">[</span><span class="nx">path</span><span class="p">]</span> <span class="o">=</span> <span class="nx">ret</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">isEmpty</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">value</span> <span class="o">===</span> <span class="s2">&quot;undefined&quot;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">value</span> <span class="o">===</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+		<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">value</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nb">Object</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">toString</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="o">===</span> <span class="s2">&quot;[object Array]&quot;</span> <span class="o">&amp;&amp;</span> <span class="nx">value</span><span class="p">.</span><span class="nx">length</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">},</span></pre></div>             </td>           </tr>                               <tr id="section-7">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-7">&#182;</a>               </div>               <p>Escapes output and converts empty values to empty strings</p>             </td>             <td class="code">               <div class="highlight"><pre>  <span class="nx">filterOutput</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">escape</span><span class="p">)</span> <span class="p">{</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">value</span><span class="p">))</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">escape</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">escapeExpression</span><span class="p">(</span><span class="nx">value</span><span class="p">);</span> 
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">value</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+
+  <span class="nx">handleBlock</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">lookup</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">arg</span><span class="p">,</span> <span class="nx">fn</span><span class="p">,</span> <span class="nx">notFn</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">out</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span><span class="nx">lookup</span><span class="p">))</span> <span class="p">{</span>
+      <span class="nx">out</span> <span class="o">=</span> <span class="nx">out</span> <span class="o">+</span> <span class="nx">lookup</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">arg</span><span class="p">,</span> <span class="nx">fn</span><span class="p">);</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">notFn</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span><span class="nx">lookup</span><span class="p">.</span><span class="nx">not</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">out</span> <span class="o">=</span> <span class="nx">out</span> <span class="o">+</span> <span class="nx">lookup</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">arg</span><span class="p">,</span> <span class="nx">notFn</span><span class="p">);</span> 
+      <span class="p">}</span> 
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">lookup</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">out</span> <span class="o">=</span> <span class="nx">out</span> <span class="o">+</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">helperMissing</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arg</span><span class="p">,</span> <span class="nx">lookup</span><span class="p">,</span> <span class="nx">fn</span><span class="p">);</span>
+      <span class="p">}</span>
+      
+      <span class="k">if</span> <span class="p">(</span><span class="nx">notFn</span> <span class="o">!=</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">out</span> <span class="o">=</span> <span class="nx">out</span> <span class="o">+</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">helperMissing</span><span class="p">.</span><span class="nx">not</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arg</span><span class="p">,</span> <span class="nx">lookup</span><span class="p">,</span> <span class="nx">notFn</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="nx">out</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">handleExpression</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">lookup</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">arg</span><span class="p">,</span> <span class="nx">isEscaped</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">out</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span><span class="nx">lookup</span><span class="p">))</span> <span class="p">{</span>
+      <span class="nx">out</span> <span class="o">=</span> <span class="nx">out</span> <span class="o">+</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">filterOutput</span><span class="p">(</span><span class="nx">lookup</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">arg</span><span class="p">),</span> <span class="nx">isEscaped</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">lookup</span><span class="p">))</span> <span class="p">{</span>
+      <span class="nx">out</span> <span class="o">=</span> <span class="nx">out</span> <span class="o">+</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">filterOutput</span><span class="p">(</span><span class="nx">lookup</span><span class="p">,</span> <span class="nx">isEscaped</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">out</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">handleInvertedSection</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">lookup</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">out</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span><span class="nx">lookup</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">lookup</span><span class="p">()))</span> <span class="p">{</span>
+      <span class="nx">out</span> <span class="o">=</span> <span class="nx">out</span> <span class="o">+</span> <span class="nx">fn</span><span class="p">(</span><span class="nx">context</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">lookup</span><span class="p">))</span> <span class="p">{</span>
+      <span class="nx">out</span> <span class="o">=</span> <span class="nx">out</span> <span class="o">+</span> <span class="nx">fn</span><span class="p">(</span><span class="nx">context</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">out</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">Handlebars</span><span class="p">.</span><span class="nx">Compiler</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">string</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">string</span>   <span class="o">=</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">pointer</span>  <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">mustache</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">text</span>     <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">fn</span>       <span class="o">=</span> <span class="s2">&quot;var out = &#39;&#39;; var lookup; &quot;</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">newlines</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">comment</span>  <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">escaped</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">partial</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">inverted</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">endCondition</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">continueInverted</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">Handlebars</span><span class="p">.</span><span class="nx">Exception</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">message</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="nx">message</span><span class="p">;</span>
+<span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-8">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-8">&#182;</a>               </div>               <p>Build out our basic SafeString type</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nx">Handlebars</span><span class="p">.</span><span class="nx">SafeString</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">string</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">string</span> <span class="o">=</span> <span class="nx">string</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="nx">Handlebars</span><span class="p">.</span><span class="nx">SafeString</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">toString</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">string</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="nx">Handlebars</span><span class="p">.</span><span class="nx">helperMissing</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+
+  <span class="k">if</span><span class="p">(</span><span class="nx">object</span> <span class="o">===</span> <span class="kc">true</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">fn</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">object</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nb">Object</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">toString</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="o">===</span> <span class="s2">&quot;[object Array]&quot;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span><span class="p">(</span><span class="kd">var</span> <span class="nx">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="nx">j</span><span class="o">=</span><span class="nx">object</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">i</span><span class="o">&lt;</span><span class="nx">j</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">ret</span> <span class="o">=</span> <span class="nx">ret</span> <span class="o">+</span> <span class="nx">fn</span><span class="p">(</span><span class="nx">object</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+		<span class="k">return</span> <span class="nx">fn</span><span class="p">(</span><span class="nx">object</span><span class="p">);</span>
+	<span class="p">}</span>
+<span class="p">};</span>
+<span class="nx">Handlebars</span><span class="p">.</span><span class="nx">helperMissing</span><span class="p">.</span><span class="nx">not</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">fn</span><span class="p">(</span><span class="nx">context</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">Handlebars</span><span class="p">.</span><span class="nx">Compiler</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="nx">getChar</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">ret</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">peek</span><span class="p">(</span><span class="nx">n</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">pointer</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">pointer</span> <span class="o">+</span> <span class="p">(</span><span class="nx">n</span> <span class="o">||</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">ret</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">peek</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">n</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">n</span> <span class="o">=</span> <span class="nx">n</span> <span class="o">||</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">start</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">pointer</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">string</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="nx">start</span><span class="p">,</span> <span class="nx">start</span> <span class="o">+</span> <span class="nx">n</span><span class="p">);</span>
+  <span class="p">},</span>
+
+  <span class="nx">compile</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">endCondition</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-9">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-9">&#182;</a>               </div>               <p>if we're at the end condition already then we don't have to do any work!</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">endCondition</span> <span class="o">||</span> <span class="o">!</span><span class="nx">endCondition</span><span class="p">(</span><span class="k">this</span><span class="p">))</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">chr</span><span class="p">;</span>
+      <span class="k">while</span><span class="p">(</span><span class="nx">chr</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getChar</span><span class="p">())</span> <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">chr</span> <span class="o">===</span> <span class="s2">&quot;{&quot;</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">peek</span><span class="p">()</span> <span class="o">===</span> <span class="s2">&quot;{&quot;</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">mustache</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">getChar</span><span class="p">();</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">parseMustache</span><span class="p">();</span>
+
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+          <span class="k">if</span><span class="p">(</span><span class="nx">chr</span> <span class="o">===</span> <span class="s2">&quot;\n&quot;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">newlines</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">newlines</span> <span class="o">+</span> <span class="s2">&quot;\n&quot;</span><span class="p">;</span>
+            <span class="nx">chr</span> <span class="o">=</span> <span class="s2">&quot;\\n&quot;</span><span class="p">;</span>
+          <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">chr</span> <span class="o">===</span> <span class="s2">&quot;\r&quot;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">newlines</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">newlines</span> <span class="o">+</span> <span class="s2">&quot;\r&quot;</span><span class="p">;</span>
+            <span class="nx">chr</span> <span class="o">=</span> <span class="s2">&quot;\\r&quot;</span><span class="p">;</span>
+          <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">chr</span> <span class="o">===</span> <span class="s2">&quot;\\&quot;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">chr</span> <span class="o">=</span> <span class="s2">&quot;\\\\&quot;</span><span class="p">;</span>
+          <span class="p">}</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">text</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">text</span> <span class="o">+</span> <span class="nx">chr</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">endCondition</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">peek</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;{{^}}&quot;</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">continueInverted</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">getChar</span><span class="p">(</span><span class="mi">5</span><span class="p">);</span>
+          <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">endCondition</span> <span class="o">&amp;&amp;</span> <span class="nx">endCondition</span><span class="p">(</span><span class="k">this</span><span class="p">))</span> <span class="p">{</span> <span class="k">break</span> <span class="p">};</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">addText</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;return out;&quot;</span><span class="p">;</span>
+
+    <span class="k">return</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">addText</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">text</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">fn</span>       <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+</span> <span class="s2">&quot;out = out + \&quot;&quot;</span> <span class="o">+</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">escapeText</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">text</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;\&quot;; &quot;</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">fn</span>       <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">newlines</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">newlines</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">text</span>     <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+
+  <span class="nx">addExpression</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">mustache</span><span class="p">,</span> <span class="nx">param</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">param</span> <span class="o">=</span> <span class="nx">param</span> <span class="o">||</span> <span class="kc">null</span><span class="p">;</span> 
+    <span class="kd">var</span> <span class="nx">expr</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">lookupFor</span><span class="p">(</span><span class="nx">mustache</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;var proxy = Handlebars.buildContext(context, stack);&quot;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;out = out + Handlebars.handleExpression(&quot;</span> <span class="o">+</span> <span class="nx">expr</span> <span class="o">+</span> <span class="s2">&quot;, proxy, &quot;</span> <span class="o">+</span> <span class="nx">param</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">escaped</span> <span class="o">+</span> <span class="s2">&quot;);&quot;</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">addInvertedSection</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">mustache</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">compiler</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">compileToEndOfBlock</span><span class="p">(</span><span class="nx">mustache</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">compiler</span><span class="p">.</span><span class="nx">fn</span><span class="p">;</span>
+    </pre></div>             </td>           </tr>                               <tr id="section-10">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-10">&#182;</a>               </div>               <p>each function made internally needs a unique IDs. These are locals, so they
+don't need to be globally unique, just per compiler</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="kd">var</span> <span class="nx">fnId</span> <span class="o">=</span> <span class="s2">&quot;fn&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">pointer</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;var &quot;</span> <span class="o">+</span> <span class="nx">fnId</span> <span class="o">+</span> <span class="s2">&quot; = function(context) {&quot;</span> <span class="o">+</span> <span class="nx">result</span> <span class="o">+</span> <span class="s2">&quot;}; &quot;</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;lookup = &quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">lookupFor</span><span class="p">(</span><span class="nx">mustache</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;; &quot;</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;out = out + Handlebars.handleInvertedSection(lookup, context, &quot;</span> <span class="o">+</span> <span class="nx">fnId</span> <span class="o">+</span> <span class="s2">&quot;);&quot;</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">openBlock</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">inverted</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">lookupFor</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">param</span><span class="p">)</span> <span class="p">{</span>
+		<span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">param</span> <span class="o">===</span> <span class="s2">&quot;undefined&quot;</span><span class="p">)</span> <span class="p">{</span>
+			<span class="k">return</span> <span class="s2">&quot;context&quot;</span><span class="p">;</span>
+		<span class="p">}</span>
+		<span class="k">else</span> <span class="p">{</span>
+    	<span class="k">return</span> <span class="s2">&quot;(Handlebars.evalExpression(&#39;&quot;</span> <span class="o">+</span> <span class="nx">param</span> <span class="o">+</span> <span class="s2">&quot;&#39;, context, stack, fallback))&quot;</span><span class="p">;</span>
+		<span class="p">}</span>
+  <span class="p">},</span>
+
+  <span class="nx">compileToEndOfBlock</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">mustache</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">compiler</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">Compiler</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">string</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pointer</span> <span class="o">+</span> <span class="mi">1</span><span class="p">));</span></pre></div>             </td>           </tr>                               <tr id="section-11">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-11">&#182;</a>               </div>               <p>sub-compile with a custom EOF instruction</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="nx">compiler</span><span class="p">.</span><span class="nx">compile</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">compiler</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">compiler</span><span class="p">.</span><span class="nx">peek</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">===</span> <span class="s2">&quot;{{/&quot;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span><span class="p">(</span><span class="nx">compiler</span><span class="p">.</span><span class="nx">peek</span><span class="p">(</span><span class="nx">mustache</span><span class="p">.</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">5</span><span class="p">)</span> <span class="o">===</span> <span class="s2">&quot;{{/&quot;</span> <span class="o">+</span> <span class="nx">mustache</span> <span class="o">+</span> <span class="s2">&quot;}}&quot;</span><span class="p">)</span> <span class="p">{</span>
+          <span class="nx">compiler</span><span class="p">.</span><span class="nx">getChar</span><span class="p">(</span><span class="nx">mustache</span><span class="p">.</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">5</span><span class="p">);</span>
+          <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+          <span class="k">throw</span> <span class="k">new</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">Exception</span><span class="p">(</span><span class="s2">&quot;Mismatched block close: expected &quot;</span> <span class="o">+</span> <span class="nx">mustache</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="p">);</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">});</span></pre></div>             </td>           </tr>                               <tr id="section-12">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-12">&#182;</a>               </div>               <p>move the pointer forward the amount of characters handled by the sub-compiler</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">this</span><span class="p">.</span><span class="nx">pointer</span> <span class="o">+=</span> <span class="nx">compiler</span><span class="p">.</span><span class="nx">pointer</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="nx">compiler</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">addBlock</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">mustache</span><span class="p">,</span> <span class="nx">param</span><span class="p">,</span> <span class="nx">parts</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">compiler</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">compileToEndOfBlock</span><span class="p">(</span><span class="nx">mustache</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">compiler</span><span class="p">.</span><span class="nx">fn</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-13">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-13">&#182;</a>               </div>               <p>each function made internally needs a unique IDs. These are locals, so they
+don't need to be globally unique, just per compiler</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="kd">var</span> <span class="nx">fnId</span> <span class="o">=</span> <span class="s2">&quot;fn&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">pointer</span><span class="p">.</span><span class="nx">toString</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;var wrappedContext = Handlebars.buildContext(context, stack);&quot;</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;stack.push(context);&quot;</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;var &quot;</span> <span class="o">+</span> <span class="nx">fnId</span> <span class="o">+</span> <span class="s2">&quot; = function(context) {&quot;</span> <span class="o">+</span> <span class="nx">result</span> <span class="o">+</span> <span class="s2">&quot;}; &quot;</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;lookup = &quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">lookupFor</span><span class="p">(</span><span class="nx">mustache</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;; &quot;</span><span class="p">;</span>
+    
+    <span class="k">if</span> <span class="p">(</span><span class="nx">compiler</span><span class="p">.</span><span class="nx">continueInverted</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kd">var</span> <span class="nx">invertedCompiler</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">compileToEndOfBlock</span><span class="p">(</span><span class="nx">mustache</span><span class="p">);</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;  var &quot;</span> <span class="o">+</span> <span class="nx">fnId</span> <span class="o">+</span> <span class="s2">&quot;Not = function(context) { &quot;</span> <span class="o">+</span> <span class="nx">invertedCompiler</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+</span> <span class="s2">&quot; };&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot; var &quot;</span> <span class="o">+</span> <span class="nx">fnId</span> <span class="o">+</span> <span class="s2">&quot;Not = null;&quot;</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;out = out + Handlebars.handleBlock(lookup, wrappedContext, &quot;</span> <span class="o">+</span> <span class="nx">param</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span> <span class="o">+</span> <span class="nx">fnId</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span> <span class="o">+</span> <span class="nx">fnId</span> <span class="o">+</span> <span class="s2">&quot;Not);&quot;</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;stack.pop();&quot;</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">openBlock</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">addPartial</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">mustache</span><span class="p">,</span> <span class="nx">param</span><span class="p">)</span> <span class="p">{</span></pre></div>             </td>           </tr>                               <tr id="section-14">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-14">&#182;</a>               </div>               <p>either used a cached copy of the partial or compile a new one</p>             </td>             <td class="code">               <div class="highlight"><pre>    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;if (typeof fallback[&#39;partials&#39;] === &#39;undefined&#39; || typeof fallback[&#39;partials&#39;][&#39;&quot;</span> <span class="o">+</span> <span class="nx">mustache</span> <span class="o">+</span> <span class="s2">&quot;&#39;] === &#39;undefined&#39;) throw new Handlebars.Exception(&#39;Attempted to render undefined partial: &quot;</span> <span class="o">+</span> <span class="nx">mustache</span> <span class="o">+</span> <span class="s2">&quot;&#39;);&quot;</span><span class="p">;</span>  
+    <span class="k">this</span><span class="p">.</span><span class="nx">fn</span> <span class="o">+=</span> <span class="s2">&quot;out = out + Handlebars.compilePartial(fallback[&#39;partials&#39;][&#39;&quot;</span> <span class="o">+</span> <span class="nx">mustache</span> <span class="o">+</span> <span class="s2">&quot;&#39;])(&quot;</span> <span class="o">+</span> <span class="nx">param</span> <span class="o">+</span> <span class="s2">&quot;, fallback);&quot;</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">parseMustache</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">chr</span><span class="p">,</span> <span class="nx">part</span><span class="p">,</span> <span class="nx">mustache</span><span class="p">,</span> <span class="nx">param</span><span class="p">;</span>
+
+    <span class="kd">var</span> <span class="nx">next</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">peek</span><span class="p">();</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="nx">next</span> <span class="o">===</span> <span class="s2">&quot;!&quot;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">comment</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">getChar</span><span class="p">();</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">next</span> <span class="o">===</span> <span class="s2">&quot;#&quot;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">openBlock</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">getChar</span><span class="p">();</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">next</span> <span class="o">===</span> <span class="s2">&quot;&gt;&quot;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">partial</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">getChar</span><span class="p">();</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">next</span> <span class="o">===</span> <span class="s2">&quot;^&quot;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">inverted</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">openBlock</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">getChar</span><span class="p">();</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="nx">next</span> <span class="o">===</span> <span class="s2">&quot;{&quot;</span> <span class="o">||</span> <span class="nx">next</span> <span class="o">===</span> <span class="s2">&quot;&amp;&quot;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">escaped</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">getChar</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">addText</span><span class="p">();</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">mustache</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="p">;</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="nx">chr</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getChar</span><span class="p">())</span> <span class="p">{</span>
+      <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">mustache</span> <span class="o">&amp;&amp;</span> <span class="nx">chr</span> <span class="o">===</span> <span class="s2">&quot;}&quot;</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">peek</span><span class="p">()</span> <span class="o">===</span> <span class="s2">&quot;}&quot;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">parts</span> <span class="o">=</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">trim</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">mustache</span><span class="p">).</span><span class="nx">split</span><span class="p">(</span><span class="sr">/\s+/</span><span class="p">);</span>
+        <span class="nx">mustache</span>  <span class="o">=</span> <span class="nx">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="nx">param</span>     <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">lookupFor</span><span class="p">(</span><span class="nx">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="nx">mustache</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span></pre></div>             </td>           </tr>                               <tr id="section-15">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-15">&#182;</a>               </div>               <p>finish reading off the close of the handlebars</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="k">this</span><span class="p">.</span><span class="nx">getChar</span><span class="p">();</span></pre></div>             </td>           </tr>                               <tr id="section-16">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-16">&#182;</a>               </div>               <p>{{{expression}} is techically valid, but if we started with {{{ we'll try to read 
+}}} off of the close of the handlebars</p>             </td>             <td class="code">               <div class="highlight"><pre>        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">escaped</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">peek</span><span class="p">()</span> <span class="o">===</span> <span class="s2">&quot;}&quot;</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">getChar</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">comment</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+          <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">partial</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">addPartial</span><span class="p">(</span><span class="nx">mustache</span><span class="p">,</span> <span class="nx">param</span><span class="p">)</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">partial</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+          <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">inverted</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">addInvertedSection</span><span class="p">(</span><span class="nx">mustache</span><span class="p">);</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">inverted</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+          <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">openBlock</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">this</span><span class="p">.</span><span class="nx">addBlock</span><span class="p">(</span><span class="nx">mustache</span><span class="p">,</span> <span class="nx">param</span><span class="p">,</span> <span class="nx">parts</span><span class="p">)</span>
+          <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">addExpression</span><span class="p">(</span><span class="nx">mustache</span><span class="p">,</span> <span class="nx">param</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="nx">escaped</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="k">if</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
+        <span class="p">;</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">mustache</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">mustache</span> <span class="o">+</span> <span class="nx">chr</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span></pre></div>             </td>           </tr>                               <tr id="section-17">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-17">&#182;</a>               </div>               <p>CommonJS Exports</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="kd">var</span> <span class="nx">exports</span> <span class="o">=</span> <span class="nx">exports</span> <span class="o">||</span> <span class="p">{};</span>
+<span class="nx">exports</span><span class="p">[</span><span class="s1">&#39;compile&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compile</span><span class="p">;</span>
+<span class="nx">exports</span><span class="p">[</span><span class="s1">&#39;compileToString&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nx">Handlebars</span><span class="p">.</span><span class="nx">compileToString</span><span class="p">;</span>
+
+</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 

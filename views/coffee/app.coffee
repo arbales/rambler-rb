@@ -30,7 +30,7 @@ Event.onReady ->
   window.onresize = ABMessageResizer
   window.onscroll = ABMessageResizer
   
-  ABApp.stream.client = new Faye.Client('http://rambler.pris.ma/faye')
+  ABApp.stream.client = new Faye.Client('/faye')
   
   ABApp.stream.client.addExtension(MessageIDHandler)
   ABApp.stream.client.addExtension(ClientAuth)

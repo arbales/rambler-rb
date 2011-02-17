@@ -56,10 +56,10 @@ MentionHandler = {
     if message.channel == "/mentions/#{ABApp.sharedStorageManager().get('username')}" &&
       message.data? && message.data.persists isnt false
         if message.data.username != ABApp.sharedStorageManager().get('username')
-          new ABMessage("<span class='user'>#{message.data.username}mentioned you&hellip;</span>#{message.data.text}", {
-            #onClose: ->
-            #  if message.data.invitation?
-            #    EUWindowWaker.wake "channel:join", {channel: message.data.invitation}
+          new ABMessage("<span class='user'>#{message.data.username} mentioned you&hellip;</span>#{message.data.text}", {
+            onClose: ->
+              if message.data.invitation?
+                EUWindowWaker.wake "channel:join", {channel: message.data.invitation}
           })
     callback message
 }
@@ -67,7 +67,7 @@ MentionHandler = {
 GroupFilter = {
   outgoing: (message,callback) ->
     matches = []
-    if message.data && message.data.text && message.data.text.scan(/\[(.*)\]/, (match) ->
+    if message.data && message.data.text && not message.data.text.startsWith("reply") && message.data.text.scan(/\[(.*)\]/, (match) ->
       matches.push match
     ) && matches.length > 0
       message.data.text = message.data.text.gsub(/\[(.*)\]/, "")
@@ -78,11 +78,14 @@ GroupFilter = {
 Threader = {
   outgoing: (message,callback) ->
     matches = []
+    if message.data && message.data.text
+      puts message.data.text
     if message.data && message.data.text && message.data.text.scan(/reply\[(.*)\]\[(.*)\]/, (match) ->
       matches.push match
     ) && matches.length > 0
       message.data.text = message.data.text.gsub(/reply\[(.*)\]\[(.*)\]/, "")
       message.channel = "/#{matches[0][1]}"
       message.data.reply = matches[0][2]
+    puts matches
     callback message
 }

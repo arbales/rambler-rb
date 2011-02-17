@@ -9,6 +9,11 @@ configure do
   set :views, File.dirname(__FILE__) + "/views"
 end
 
+configure :development do
+  use Rack::Reloader
+  RamblerApp::reset!
+end
+
 file_name = File.join(File.dirname(__FILE__), ".", "config", "mongoid.yml")
 @mongoid_settings = YAML.load(ERB.new(File.new(file_name).read).result)
 
