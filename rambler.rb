@@ -56,7 +56,8 @@ require 'renderer.rb'
     end 
     
     get '/posts/destroy!' do
-      Post.destroy_all!
+      rack_protected!
+      Post.delete_all!
       ":'("
     end
 
