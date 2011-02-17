@@ -54,6 +54,11 @@ require 'renderer.rb'
       @people = Person.all
       haml :people
     end 
+    
+    get '/posts/destroy!' do
+      Post.destroy_all!
+      ":'("
+    end
 
     get '/hbs/:name.hbs' do
      partial params[:name]
